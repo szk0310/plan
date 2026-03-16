@@ -1,0 +1,520 @@
+
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge"/>
+<meta name="viewport" content="width=device-width,initial-scale=1.0, minimum-scale=1.0">
+<meta HTTP-EQUIV="Content-type" CONTENT="text/html; charset=UTF-8">
+<meta name="description" content="株式会社shiroは飯田橋にあるウェブデザイン・コーディングの制作会社です。繊細なデザインワークと正確なコーディングが得意です。ランディングページ、サイト構築の他、システム開発のフロントエンドやワードプレス案件も承ります。">
+<meta name="keywords" content="">
+    
+<title>shiro Inc.</title>
+    
+<link href="https://shiro-k.jp/to_pardot_AE/assets/css/base.css" rel="stylesheet" type="text/css" />
+<link href="https://shiro-k.jp/to_pardot_AE/assets/css/style.css" rel="stylesheet" type="text/css" />
+<link href="https://shiro-k.jp/to_pardot_AE/assets/css/style_lp.css" rel="stylesheet" type="text/css" />
+<link href="https://shiro-k.jp/to_pardot_AE/assets/css/slick.css" rel="stylesheet" type="text/css" />
+<link href="https://unpkg.com/aos@2.3.1/dist/aos.css" rel="stylesheet">
+    
+<link href="https://api.fontshare.com/v2/css?f[]=chillax@1,600,500,300,700,400,200&display=swap" rel="stylesheet">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Zen+Kaku+Gothic+New:wght@300;400;500;700;900&display=swap" rel="stylesheet">
+        <!-- Google reCAPTCHA v3 -->
+        <script src="https://www.google.com/recaptcha/api.js?render=6LcWEXEnAAAAAHy9RBSdl4M3IMBaMfR5YLGMk8f0"></script>
+        <script>
+            function post_results() {
+                var fm = document.getElementById("form_results");
+                grecaptcha.ready(function () {
+                    grecaptcha.execute('6LcWEXEnAAAAAHy9RBSdl4M3IMBaMfR5YLGMk8f0', { action: 'results' }).then(function (token) {
+                        // フォーム送信時に使用するトークンを取得
+                        fm.recaptcha_token.value = token;
+                        fm.method = "post";
+                        fm.action = "https://shiro-k.jp/recaptcha/results_ae2023.php";
+                        fm.submit();
+                    });
+                });
+            }
+
+            function post_kakaku() {
+                var fm = document.getElementById("form_kakaku");
+                grecaptcha.ready(function () {
+                    grecaptcha.execute('6LcWEXEnAAAAAHy9RBSdl4M3IMBaMfR5YLGMk8f0', { action: 'kakaku' }).then(function (token) {
+                        // フォーム送信時に使用するトークンを取得
+                        fm.recaptcha_token.value = token;
+                        fm.method = "post";
+                        fm.action = "https://shiro-k.jp/recaptcha/kakaku_ae2023.php";
+                        fm.submit();
+                    });
+                });
+            }
+            function post_toi() {
+                var fm = document.getElementById("form_toi");
+                grecaptcha.ready(function () {
+                    grecaptcha.execute('6LcWEXEnAAAAAHy9RBSdl4M3IMBaMfR5YLGMk8f0', { action: 'toi' }).then(function (token) {
+                        // フォーム送信時に使用するトークンを取得
+                        fm.recaptcha_token.value = token;
+                        fm.method = "post";
+                        fm.action = "https://shiro-k.jp/recaptcha/toi_ae2023.php";
+                        fm.submit();
+                    });
+                });
+            }
+        </script>
+
+        <!-- End reCAPTCHA v3 -->
+        
+        <!-- Google Tag Manager -->
+<script>(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
+new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],
+j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
+'https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);
+})(window,document,'script','dataLayer','GTM-5D9SWMW');</script>
+<!-- End Google Tag Manager -->
+
+<script type="text/javascript">
+piAId = '943883';
+piCId = '291419';
+piHostname = 'go.shiro-k.jp';
+
+(function() {
+	function async_load(){
+		var s = document.createElement('script'); s.type = 'text/javascript';
+		s.src = ('https:' == document.location.protocol ? 'https://' : 'http://') + piHostname + '/pd.js';
+		var c = document.getElementsByTagName('script')[0]; c.parentNode.insertBefore(s, c);
+	}
+	if(window.attachEvent) { window.attachEvent('onload', async_load); }
+	else { window.addEventListener('load', async_load, false); }
+})();
+</script></head>
+    
+<body>
+    <!-- header -->
+    <header data-aos="fade-down" data-aos-delay="2200">
+        <div class="header-in">
+            <h1 class="header-logo"><a href="#"><img alt="shiro" src="https://shiro-k.jp/to_pardot_230703/assets/img/h-logo.svg" /></a></h1>
+            <div class="gnav-wrap">
+                <nav>
+                    <ul id="gnav">
+                        <li class="is-imghover"><a href="https://go.shiro-k.jp/2023#service" class="">Service</a></li>
+                        <li class="is-imghover"><a href="#works" class="">Works</a></li>
+                        <li class="is-imghover"><a href="#company" class="">Company</a></li>
+                        <!--  <li class="btn-contact"><a href="#" class="js-modal-open" data-target="modal03"><span>Contact</span></a></li> -->
+                    </ul>
+                </nav>
+            </div>
+            <div id="sp-menu-trigger">
+                <div class="sp-menu-trigger-in">
+                    <span></span>
+                    <span></span>
+                    <span></span>
+                </div>
+            </div>
+        </div>
+    </header>
+    <!-- header -->
+
+    
+    <main class="l-main">
+        <!-- ===== MV ===== -->
+        <section class="sec-mv">
+            <div class="mv-bg-fade"></div>
+            <div class="mv-in">
+                <p class="mv-copy text-span pc">
+                    <span>M</span><span>a</span><span>r</span><span>k</span><span>e</span><span>t</span><span>i</span><span>n</span><span>g</span><span>&nbsp;</span><span>C</span><span>l</span><span>o</span><span>w</span><span>d</span>
+                </p>
+                <p class="mv-copy2 text-span pc">
+                    <span>A</span><span>c</span><span>c</span><span>o</span><span>u</span><span>n</span><span>t</span><span>&nbsp;</span><span>E</span><span>n</span><span>g</span><span>a</span><span>g</span><span>e</span><span>m</span><span>e</span><span>n</span><span>t</span>
+                </p>
+                <!--<p class="mv-copy3 text-span pc">
+                    <span>p</span><span>o</span><span>w</span><span>e</span><span>r</span><span>d</span><span>&nbsp;</span><span>b</span><span>y</span><span>&nbsp;</span><span>s</span><span>h</span><span>i</span><span>r</span><span>o</span><span>&nbsp;</span><span>I</span><span>n</span><span>c</span><span>.</span>
+                </p>-->
+                <p class="mv-copy text-span sp">
+                    <span>M</span><span>a</span><span>r</span><span>k</span><span>e</span><span>t</span><span>i</span><span>n</span><span>g</span>
+                </p>
+                <p class="mv-copy2 text-span sp">
+                    <span>C</span><span>l</span><span>o</span><span>w</span><span>d</span>
+                </p>
+                <p class="mv-copy3 text-span sp">
+                    <span>A</span><span>c</span><span>c</span><span>o</span><span>u</span><span>n</span><span>t</span>
+                </p>
+                <p class="mv-copy4 text-span sp">
+                    <span>E</span><span>n</span><span>g</span><span>a</span><span>g</span><span>e</span><span>m</span><span>e</span><span>n</span><span>t</span>
+                </p>          
+                
+               <div data-aos="fade-up" data-aos-delay="800">
+                   <div class="mv-bgimg">
+                        <picture>
+                          <!-- WebP用画像 -->
+                          <!--<source srcset="assets/img/img-mv-01.webp" media="(min-width:769px)" type="image/webp">
+                          <source srcset="assets/img/img-mv-01-sp.webp" media="(max-width:768px)" type="image/webp">-->
+                          <!-- 従来画像 -->
+                          <img src="https://shiro-k.jp/to_pardot_AE/assets/img/bg_mv-in.png" alt="" class="pc">
+                          <img src="https://shiro-k.jp/to_pardot_AE/assets/img/bg_mv-in.png" alt="" class="sp">
+                        </picture>
+                   </div>
+               </div>
+                
+                <div data-aos="fade-up" data-aos-delay="1800">
+                    <div class="mv-copy_wrap">
+                        <div class="mv-copy_box">
+                            <p class="mv-shiro">powerd&nbsp;by&nbsp;shiro&nbsp;Inc.</p>
+                            <p class="mv-txt">shiro Incは2023年7月、Salesforce社のコンサルティングパートナープログラムのExpert Levelに認定されました。<br>私たちはSalesforceのMAツールであるAccount Engagementの導入からマーケティングアセットの制作、マーケティングフローの設計運用、データのビジュアル分析までを完全サポートします。</p>
+                        </div>
+                        <ul class="mv-copy_badge">
+                            <li><img src="https://shiro-k.jp/to_pardot_AE/assets/img/img_sf_badge01.png" width="100%" alt=""/></li>
+                            <li><img src="https://shiro-k.jp/to_pardot_AE/assets/img/img_sf_badge02.png" width="100%" alt=""/></li>
+                            <li><img src="https://shiro-k.jp/to_pardot_AE/assets/img/img_sf_badge03.png" width="100%" alt=""/></li>
+                            <li><img src="https://shiro-k.jp/to_pardot_AE/assets/img/img_sf_badge04.png" width="100%" alt=""/></li>
+                        </ul>
+                    </div>   
+                </div> 
+            </div>
+        </section>
+        <!-- ===== MV ===== -->
+        
+        
+         <!-- ===== marketing assets ===== -->
+        <section class="sec-feature sec-common">
+            <div class="sec-cont_main" >
+                <h2 class="lp-common_h2" data-aos="fade-up">私たちは<br><span class="en">Account Engagement</span><br>のマーケティング戦略を<br>クリエイティブの力で<br>前に進めます！</h2>
+                <p class="lp-common_txt" data-aos="fade-up">「shiro Inc」の特徴は、多くの企業のウェブコンテンツの最前線で制作してきた経験を活かし、<br class="pc">ランディングページやフォーム、HTMLメールなどのマーケティングアセットの質を向上させ<br class="pc">Account Engagementのポテンシャルを最大化できる点にあります。<br>また、私たちは自身もセールスフォースユーザーとしてCVRの向上に向けて創意工夫してきたノウハウを貴社と共有することで、<br class="pc">共に成長できることを願っています。</p>
+                <p class="lp-common_txt-en" data-aos="fade-up">Watch a few seconds overview to learn how B to B marketing<br class="pc">automation by Salesforce <br class="pc">can help you increase leads, boostsales, <br>be more productive - and transform your business.</p>
+                <div class="feature-video-wrap" data-aos="fade-up">
+                    <div class="video-wrap">
+                        <video src="https://shiro-k.jp/to_pardot_AE/assets/img/mov_feature.mp4" autoplay muted playsinline preload loop></video>
+                    </div>
+                </div>        
+            </div>   
+        </section>    
+        
+        
+        
+        <!-- ===== CV ===== -->
+        <section class="sec-cv" data-aos="fade-up" id="works">
+            <div class="cv-left">
+                <a href="#" class="btn-black js-modal-open" data-target="modal01"><span>詳しい制作実績はこちら</span></a>
+            </div>
+            <div class="cv-right">
+                <a href="#" class="btn-black js-modal-open" data-target="modal02"><span>標準価格表はこちら</span></a>
+            </div>
+        </section>
+        <!-- ===== CV ===== -->
+        
+        
+        <!-- ===== marketing assets ===== -->
+        <section class="sec-mktassets sec-common">
+            <h2 class="lp-common_h2" data-aos="fade-up">Marketing <br class="sp">Assets<span>CVに繋がるマーケティングアセットを手にしてください</span></h2>
+            <p class="lp-common_txt" data-aos="fade-up">Account Engagementの効果を最大化するため、対象ユーザーに寄せたカラーパレットの設計、<br class="pc">ユーザーが簡単にアクションを起こせる効果的なCTAの配置、<br class="sp">コンテンツの認知を高める適切なセクション間のリズムなど<br class="pc">クリエイティブとフィードバックデータに基づいたアプローチを融合させてCVに繋がるマーケティングアセットを制作します。</p>
+            <p class="lp-common_txt-en" data-aos="fade-up">Designing a colour palette that is more targeted to the target audience in order to maximise the effectiveness of Account Engagement,Effective CTAs that allow users to easily take action, <br class="pc">and the right rhythm between sections to increase awareness of content. <br class="pc">We produce marketing assets that lead to CVs by integrating creative <br class="pc">and feedback data-based approaches.</p>
+            <div class="sec-cont_main" data-aos="fade-up">
+                <ul class="sec-cont_list">
+                    <li>
+                        <p class="mktassets-list_ttl">LP</p>
+                        <figure><img src="https://shiro-k.jp/to_pardot_AE/assets/img/img_mktassets01.png" width="100%" alt="LP画面"/></figure>
+                        <p class="mktassets-list_txt">Flexbox CSSによる汎用性の高いレイアウト構成、ウェブフォントの実装、パララックス、スライダー、アコーディオンなどのJSライブラリの実装、解析や広告タグの埋め込み、ディスクリプションやOGPに対応したmetaタグの構成、Google Mapの埋め込みを行います。<br>多くのランディングページを制作してきた私たちの経験とAccount Engagementの持つマーケティングメソッドを融合して高いCVRを目指します。</p>
+                    </li>
+                    <li>
+                        <p class="mktassets-list_ttl">htmlメール</p>
+                        <figure><img src="https://shiro-k.jp/to_pardot_AE/assets/img/img_mktassets02.png" width="100%" alt="htmlメール画面"/></figure>
+                        <p class="mktassets-list_txt">マルチデバイスに対応したHTMLメールは、オーディエンスとのエンゲージメントを高めるためにデザインされ、顧客の視覚にアピールします。<br>さらに、特定のウェブページやコンテンツへの誘導開封率やクリック率の分析、特定のリンクやボタンの効果を評価するデータを収集して、メールキャンペーンの成功を測定します。</p>
+                    </li>
+                    <li>
+                        <p class="mktassets-list_ttl">form</p>
+                        <figure><img src="https://shiro-k.jp/to_pardot_AE/assets/img/img_mktassets03.png" width="100%" alt="form画面"/></figure>
+                        <p class="mktassets-list_txt">Account Engagementの標準フォームをオリジナルデザインでレスポンシブ対応させるだけでなく、既存のワードプレスなどのフォームをAccount Engagementに連携させることも可能です。<br>各種クラウドフォームやプラグイン、phpスクラッチコードからのポスト送信など、様々なフォームインテグレーションの方法に精通した弊社のスペシャリストが貴社のフォームに最適な実装をします。</p>
+                    </li>
+                </ul>
+            </div>
+        </section>
+        <!-- ===== marketing assets ===== -->
+        
+        
+        <!-- ===== 3rd Party API ===== -->
+        <section class="sec-api sec-common">
+            <h2 class="lp-common_h2" data-aos="fade-up">integration Forms and API<span>多彩なシステムの<br class="sp">インテグレーションを実現します</span></h2>
+            <p class="lp-common_txt" data-aos="fade-up">Google Workspace、予約カレンダー、zoomフォン、マネーフォワード等、<br>サードパーティ製品とセールスフォースとのインテグレーションをAPI、webhooなどの方法で実装します。<br>またワードプレスなど既存システムを活かしたまま現在お使いのフォームをAccount Engagementと連携します。</p>
+            <p class="lp-common_txt-en" data-aos="fade-up">Google Workspace, booking calendar, zoom phone, Money Forward, etc,<br>Third-party products can be integrated with Salesforce via API, webhoo or other methods.<br>We can also integrate your current forms with Account Engagement <br class="pc">while utilising existing systems such as WordPress.</p>
+            <div class="sec-cont_main" data-aos="fade-up">
+                <p class="api-read">SalesForce CRM<br>and<br>Account Engagement</p>
+                <figure><img src="https://shiro-k.jp/to_pardot_AE/assets/img/img_api.png" width="100%" alt="セールスフォース連携イメージ"/></figure>
+            </div>
+        </section>
+        <!-- ===== 3rd Party API ===== -->
+              
+        
+        <!-- ===== Marckting Flow ===== -->
+        <section class="sec-flow sec-common">
+            <h2 class="lp-common_h2" data-aos="fade-up">Marckting Flow<br>Planning / Running<span>貴社に最適なマーケティングフローを作りましょう</span></h2>
+            <p class="lp-common_txt" data-aos="fade-up">展示会施策のような短期フローからメルマガやSNSオウンドメディアのような長期フローまで、<br class="pc">カスタマージャーニーに沿って計画された施策をAccount EngagementのEngagement Studio画面に落とし込み、PDCAを視覚化します。<br>私たちはEngagement Studioを使った施策プランニングから運用をサポートします。</p>
+            <p class="lp-common_txt-en" data-aos="fade-up">From short-term flows such as exhibition initiatives to long-term flows such as email newsletters and SNS owned media,The measures planned in line with the customer journey are put into Account Engagement's Engagement Studio screen to visualise the PDCA cycle.<br class="pc">We support you in the planning and operation of your initiatives using Engagement Studio.</p>
+            <div class="sec-cont_main" data-aos="fade-up">
+                <ul class="sec-cont_list">
+                    <li><img src="https://shiro-k.jp/to_pardot_AE/assets/img/img_flow01.png" width="100%" alt="展示会フロー"/></li>
+                    <!--<li><img src="https://shiro-k.jp/to_pardot_AE/assets/img/img_flow01.png" width="100%" alt=""/></li>-->
+                </ul>    
+            </div>
+        </section>
+        <!-- ===== Marckting Flow ===== -->
+         
+        
+        <!-- ===== data Visualising ===== -->
+        <section class="sec-datavisu sec-common">
+            <h2 class="lp-common_h2" data-aos="fade-up">Data <br class="sp">Visualising<span>CRM Anaryticsを使った統計データをビジュアライズします</span></h2>
+            <p class="lp-common_txt" data-aos="fade-up">Account Engagementの生データをフィルタリング、計算、データ結合などの加工によって、<br class="pc">貴社のニーズに最適化したオリジナルのデータセットを生成します。<br>そうして作られたデータセットはCRM Anarytics上のダッシュボードにドリルダウンなどインタラクティブに反応するグラフとして配置されます。<br>私たちはデータに基づいたマーケティング戦略が貴社のビジネス成果を向上させる事を確信しています。</p>
+            <p class="lp-common_txt-en" data-aos="fade-up">By processing raw data from Account Engagement, including filtering, calculation and data merging,generate original datasets optimised for your company's needs.<br class="pc">The resulting dataset is then placed in a dashboard in CRM Anarytics as a graph <br class="pc">with drill-downs and other interactive responses.<br class="pc">We are convinced that a data-driven marketing strategy will improve your business results.</p>
+            <div class="sec-cont_main" data-aos="fade-up">
+                <ul class="sec-cont_list">
+                    <li><img src="https://shiro-k.jp/to_pardot_AE/assets/img/img_datavisu01.png" width="100%" alt="data Visualising"/></li>
+                    <li><img src="https://shiro-k.jp/to_pardot_AE/assets/img/img_datavisu02.png" width="100%" alt=""/></li>
+                </ul>    
+            </div>
+        </section>
+        <!-- ===== data Visualising ===== -->
+        
+        
+        <!-- ===== Lecture Support ===== -->
+        <section class="sec-lecture sec-common">
+            <h2 class="lp-common_h2" data-aos="fade-up">Lecture Support<span>貴社目線に立ったサポートを<br class="sp">提供します</span></h2>
+            <p class="lp-common_txt" data-aos="fade-up">貴社のアカウントでAccount Engagementのインストール及び初期設定を代行します。<br>また、3ヶ月を目処にマーケティングアセットの作成からベースとなるマーケティングフローを<br class="pc">貴社とのミーティングを通して本番アセットとして立ち上げます。<br>このサポートで無駄な学習時間をなくし、インストールから実践マーケティングまで最短でAccount Engagementの効果を実感していただけます。<br>私たちは貴社のセールスフォース担当者、サポートと密接に連携をとって最高レベルのサポートを提供します。</p>
+            <p class="lp-common_txt-en" data-aos="fade-up">We will install and initially set up Account Engagement on your company's account on your behalf.<br>In addition, we will create the marketing assets and the base marketing flow in around three months.<br class="pc">We will meet with your company to set up the asset as a production asset.<br class="pc">This support eliminates wasted learning time and allows you to realise the benefits of Account Engagement in the shortest possible time, from installation to practical marketing.<br class="pc">We work closely with your sales force representative <br class="pc">and support to provide the highest level of support.</p>
+            <div class="sec-cont_main" data-aos="fade-up">
+                <figure>
+                    <img src="https://shiro-k.jp/to_pardot_AE/assets/img/bg_sec_lecture.png" width="100%" class="pc" alt="Lecture Supportイメージ"/>
+                    <img src="https://shiro-k.jp/to_pardot_AE/assets/img/bg_sec_lecture_sp.png" width="100%" class="sp" alt="Lecture Supportイメージ"/>
+                </figure>
+            </div>
+        </section>
+        <!-- ===== Lecture Support ===== -->
+        
+        
+        <!-- ===== Note ===== -->
+        <section class="sec-note sec-common">
+            <div class="sec-note_main">
+                <a href="https://note.com/shiro_inc" target="_blank">
+                    <p class="note-logo"><img src="https://shiro-k.jp/to_pardot_AE/assets/img/logo_note.jpg" width="100%" alt="note"/></p>
+                    <div class="note-txt_wrap">
+                        <p class="note-txt_ttl">AccountEngagementについてのnoteはこちら</p>
+                        <p class="note-txt">shiro IncでWEB制作に従事。AccountEngagementの記事を主に書きます。Pardotスペシャリスト、Pardotコンサルタント<span>（trailblazer.me/id/shiroinc）</span></p>
+                    </div>
+                </a>
+            </div>
+        </section>    
+              
+        
+        <!-- ===== company ===== -->
+        <section class="sec-company" id="company">
+            <h2 class="sec-ttl text-span" data-aos="fade-up"><span>C</span><span>o</span><span>m</span><span>p</span><span>a</span><span>n</span><span>y</span></h2>
+            <div class="company-con">
+                <dl>
+                    <dt>2011年</dt>
+                    <dd>：美大卒業メンバーで会社設立<br class="sp">（11期目）</dd>
+                    <dt>代表取締役</dt>
+                    <dd>：鈴木隆弥</dd>
+                    <dt>オフィス</dt>
+                    <dd>：〒102-0071 東京都千代田区富士見<br class="sp">1-3-10 CF1310 1F</dd>
+                    <dt>スタッフ</dt>
+                    <dd>：ディレクター 2名、デザイン / <br class="sp">コーダー4名、<br class="pc">エンジニア 1名、<br class="sp">マーケター１名、バックオフィス1名</dd>
+                    <dt>資本金</dt>
+                    <dd>：2,000,000円</dd>
+                    <dt>事業内容</dt>
+                    <dd>：ウェブサイト制作・ランディングページ制作・<br class="pc">フロントエンド制作</dd>
+                    <dt>URL</dt>
+                    <dd>：ウェブサイト制作・ランディングページ制作・<br class="pc">フロントエンド制作</dd>
+                </dl>
+                <div class="company-map" data-aos="fade-left">
+                    <iframe src="https://www.google.com/maps/embed?pb=!1m14!1m8!1m3!1d12960.530095712458!2d139.7463174!3d35.6983563!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x60188d7d6c57a093%3A0xdd155a604442072e!2sshiro%20Inc!5e0!3m2!1sja!2sjp!4v1688379964175!5m2!1sja!2sjp" width="" height="" style="border:0;" allowfullscreen="" loading="lazy" referrerpolicy="no-referrer-when-downgrade"></iframe>
+                </div>
+            </div>
+        </section>
+        <!-- ===== company ===== -->
+        
+        <!-- ===== CV ===== -->
+        <!--  <section class="sec-cv" id="contact">
+            <p class="contact-btn"><a href="#" class="btn-black js-modal-open" data-target="modal03"><span>Contact</span></a></p>
+            <p class="cv-left"></p>
+            <p class="cv-right"></p>
+        </section> -->
+        <!-- ===== CV ===== -->
+        
+        <!-- ===== modal01 ===== -->
+        <div id="modal01" class="modal js-modal">
+          <div class="modal-overlay">
+              <div class="modal-con">
+                <form method="post" action="post_results()" class="cv-form">
+                    <p>下記のフォームにご記入いただいた<br class="sp">メールアドレスに<br>制作実績ページのURLとID、<br>パスワードをお送りいたします。</p>
+                    <dl>
+                        <dt><label>お名前</label></dt>
+                        <dd><input type="text" name="name" class="name"></dd>
+                    </dl>
+                    <dl>
+                        <dt><label>会社名</label></dt>
+                        <dd><input type="text" name="company" class="company"></dd>
+                    </dl>
+                    <dl>
+                        <dt><label>メールアドレス</label></dt>
+                        <dd><input type="email" name="email" class="email"></dd>
+                    </dl>
+                    <input type="submit" class="submit-btn" value="送信">
+                </form>
+              <a class="modal-close" href="#"><span class="close_btn"></span></a>
+          </div>
+          </div>
+        </div>
+        <!-- ===== modal01 ===== -->
+        
+        <!-- ===== modal02 ===== -->
+        <div id="modal02" class="modal js-modal">
+          <div class="modal-overlay">
+              <div class="modal-con">
+               <form method="post" action="post_kakaku()" class="cv-form">
+                    <p>下記のフォームにご記入いただいた<br class="sp">メールアドレスに<br>標準価格表ページのURLとID、<br>パスワードをお送りいたします。</p>
+                    <dl>
+                        <dt><label>お名前</label></dt>
+                        <dd><input type="text" name="name" class="name"></dd>
+                    </dl>
+                    <dl>
+                        <dt><label>会社名</label></dt>
+                        <dd><input type="text" name="company" class="company"></dd>
+                    </dl>
+                    <dl>
+                        <dt><label>メールアドレス</label></dt>
+                        <dd><input type="email" name="email" class="email"></dd>
+                    </dl>
+                    <input type="submit" class="submit-btn" value="送信">
+                </form>
+              
+              <a class="modal-close" href="#"><span class="close_btn"></span></a>
+          </div>
+          </div>
+        </div>
+        <!-- ===== modal02 ===== -->
+        
+        <!-- ===== modal03 ===== -->
+        <div id="modal03" class="modal js-modal">
+          <div class="modal-overlay">
+              <div class="modal-con">
+                <form method="post" action="https://webto.salesforce.com/servlet/servlet.WebToLead?encoding=UTF-8&orgId=00D2r000000Eqa0" method="POST" class="cv-form">
+                    <p>下記フォームからお問い合わせください。</p>
+                    <dl>
+                        <dt><label>お名前</label></dt>
+                        <dd><input type="text" name="last_name" class="name"></dd>
+                    </dl>
+                    <dl>
+                        <dt><label>会社名</label></dt>
+                        <dd><input type="text" name="company" class="company"></dd>
+                    </dl>
+                    <dl>
+                        <dt><label>メールアドレス</label></dt>
+                        <dd><input type="email" name="email" class="email"></dd>
+                    </dl>
+                    <dl>
+                        <dt>
+                            <label class="field-label">お問い合わせ内容</label>
+                        </dt>
+                        <dd class="arrow">
+                            <select name="sosinmokuteki" class="content" required>
+                                <option disabled selected>選択してください</option>
+                                <option value="LP・Webサイト制作">LP・Webサイト制作</option>
+                                <option value="フロントエンド制作">フロントエンド制作</option>
+                                <option value="マーケティング支援">マーケティング支援</option>
+                            </select>
+                        </dd>
+                    </dl>
+                    <input type=hidden name="oid" value="00D2r000000Eqa0">
+                    <input type=hidden name="retURL" value="https://go.shiro-k.jp/HP/thanks">
+                    <input type="submit" class="submit-btn" value="送信">
+                    <p class="mt20">お急ぎの方はページ右下のチャットより<br class="sp">お願いします。</p>
+                </form>
+            <a class="modal-close" href="#"><span class="close_btn"></span></a>
+          </div>
+          </div>
+          
+        </div>
+        <!-- ===== modal03 ===== -->
+        
+    </main>
+    
+    <!-- ===== footer===== -->
+    <footer id="footer">
+        <div class="footer-in">
+            <p class="footer-sdgs"><img alt="5 ジェンダー平等を実現しよう" src="https://shiro-k.jp/to_pardot_230703/assets/img/img-sdgs.jpg" /></p>
+            <div>
+                <p class="footer-thanks">Thank you for your reading to bottom</p>
+                <p class="s-txt">We absolutely support SDGs 5.5 as below<br>Ensure women’s full and effective participation and equal opportunities for leadership <br>at all levels of decision-making in political, economic and public life.</p>
+                <a href="pp.html" class="privacy is-imghover">ー Privacy Policy</a>
+            </div>
+        </div>
+        
+    </footer>
+    <!-- ===== footer===== -->
+
+<script type="text/javascript" src="https://shiro-k.jp/to_pardot_230703/assets/js/jquery-3.3.1.min.js"></script>
+<script type="text/javascript" src="https://shiro-k.jp/to_pardot_230703/assets/js/common.js"></script>
+<script type="text/javascript" src="https://shiro-k.jp/to_pardot_230703/assets/js/slick.min.js"></script>
+<link href="https://unpkg.com/aos@2.3.1/dist/aos.css" rel="stylesheet">
+<script src="https://unpkg.com/aos@2.3.1/dist/aos.js"></script>
+
+<script>
+    $(function () {
+    /*--------------------------------
+        スライドショー
+    ---------------------------------*/
+    $('.mv-slide').slick({
+        fade: true,
+        autoplay: true,
+        arrows: false,
+        dots: true,
+        infinite: true,
+        slidesToShow: 1,
+        slidesToScroll: 1,
+        pauseOnHover: false,
+        speed: 1000,
+        autoplaySpeed: 5000,
+    });
+    
+    $('.works-slide').slick({
+        autoplay: false,
+        arrows: true,
+        prevArrow: '<div class="slide-arrow arrow-prev is-imghover"></div>',
+		nextArrow: '<div class="slide-arrow arrow-next is-imghover"></div>', 
+        dots: false,
+        infinite: true,
+        slidesToShow: 3,
+        slidesToScroll: 1,
+        pauseOnHover: false,
+        speed: 1000,
+        autoplaySpeed: 5000,
+        responsive: [{
+          breakpoint: 768,
+          settings: {
+            centerMode: true,
+            centerPadding: "18%",
+            slidesToShow:1,
+          }
+        }],
+    });
+  });
+
+</script>
+<script>
+    $(window).on('load', function () {
+	  AOS.refresh();
+	});
+    AOS.init({
+        startEvent: 'load',
+        offset: 100,
+        delay: 200,
+        duration: 600,
+        easing: 'ease-out',
+        anchorPlacement:'center-bottom',
+        once:false
+    });
+    $('.mv-bg-fade').animate({
+        'opacity' : '1'
+    }, 800);
+</script>
+</body>
+<script src="https://embed.small.chat/T01MLL8ECKCC06SWG53XNZ.js" async></script>
+</html>
