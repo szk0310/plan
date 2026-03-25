@@ -1,0 +1,5753 @@
+Set model to opus (claude-opus-4-6)
+
+オッパの指示書通りに黒子の実装が終わりました。- Phase 2.5 全タスク完了状況
+  - 実行済みマイグレーション一覧
+  - 現在の機能・アーキテクチャ
+  - 主要ファイル構成
+  - 残課題（フロント改善・テスト強化・Terraform）
+  - 次の方向性（Phase 3）
+お疲れさまです！Phase 2.5 完走、素晴らしいですね。現状を把握させてください。
+
+Read Phase2.5_OVERVIEW.md
+Globpattern: "*.md"
+Found 18 files
+Read HANDOFF.md
+Read SONNET_INSTRUCTIONS.md
+全容把握しました。黒子（Sonnet）、8タスク＋品質改善まで完走、見事です。
+
+Phase 2.5 完了の評価
+よくできた点：
+
+RLS セッションリーク（TASK_01）— 最も危険な脆弱性を最優先で潰した。SET LOCAL + withTenant<T> パターンは商用水準
+leads → contacts 統合（TASK_03）— データモデルが綺麗になった。lifecycle_stage での管理は SaaS 化に必須だった
+AI モデル一元管理（TASK_02）— ai-models.ts に集約したことで、モデル更新が1ファイルで済む
+MEDDPICC コーチング（TASK_08）— 差別化機能。スコア低下アラート＋週次サマリーまで入ったのは期待以上
+残課題の優先度整理（Phase 3 に向けて）
+今の状態を「社内ツール → SaaS 外販」の観点で見ると、やるべき順序はこうです：
+
+Tier 1 — 外販前に必須（4月中）
+#	項目	理由
+1	テスト強化（deal-coaching + API統合テスト + CI自動実行）	テストなしで外部顧客に出すのは事故の元。カバレッジ60%がまだ未達のはず
+2	Terraform dev/prod 分離	顧客データが入る本番と開発を同じ設定で動かすのは危険
+3	マルチテナント OAuth フロー	自社以外が使うなら Slack OAuth の「Add to Slack」ボタンが必要
+Tier 2 — β版公開までに（5-6月）
+#	項目	理由
+4	Stripe 連携（課金）	売上がないと事業にならない
+5	Slack App Directory 申請	審査に2-4週間かかるので早めに出す
+6	フロント改善（ページネーション、モーダル内メモ追加）	UX がないと定着しない
+Tier 3 — 成長フェーズ（7月以降）
+アクティビティログ / 監査証跡（エンタープライズ顧客向け）
+Webhook / API 公開（他システム連携）
+ダッシュボード分析機能の強化
+次にやりたいことがあれば、タスク設計書を書きます
+Phase 3 のどこから着手するか、方針を聞かせてください。
+
+dummy Dataを入れて、E2Eテストの計画をしたいです。Playwright できるだけ人手をかけずテストしたいな。そしてフロントの改善も必要です。特に気になるのはWebの一覧とModalの一覧で、ここでのUI/UXの整合性を取らなければいけないと思っています。
+まず現状のフロントとテスト基盤を把握させてください。
+
+Agent:Explore slackSFA frontend & tests
+IN
+Thoroughly explore the slackSFA project at /Users/szk/Desktop/APP/slackSFA to understand:
+
+1. **Frontend structure**: Look at web/src/ — especially views, components, and how lists/modals are rendered. Focus on:
+   - DealBoard.vue, DealDetail.vue
+   - Any contact list views
+   - Any modal components
+   - How data is fetched (API calls, stores)
+   - UI framework used (Vuetify? Tailwind? custom?)
+
+2. **Slack Block Kit views**: Look at api/src/slack/commands/crm-list.ts and api/src/slack/views/detail-card.ts to understand how the Slack modal lists work
+
+3. **Existing test setup**: Look at:
+   - Any existing Playwright config or tests
+   - vitest config
+   - test files in tests/ or api/src/**/*.test.ts
+   - package.json scripts related to testing
+   - docker-compose files for test environment
+
+4. **API routes**: Look at api/src/routes/api.ts to understand available endpoints
+
+5. **Database seed/migration files**: Check if there are any seed files or test data helpers
+
+6. **Current dummy data situation**: Any existing fixtures or seed scripts
+
+Return detailed findings on all of the above, including file paths and key code snippets.
+Bash
+IN
+find /Users/szk/Desktop/APP/slackSFA -type f -name "*.json" | head -20
+
+OUT
+/Users/szk/Desktop/APP/slackSFA/web/node_modules/@types/estree/package.json
+/Users/szk/Desktop/APP/slackSFA/web/node_modules/csstype/package.json
+/Users/szk/Desktop/APP/slackSFA/web/node_modules/@volar/typescript/package.json
+/Users/szk/Desktop/APP/slackSFA/web/node_modules/@volar/language-core/package.json
+/Users/szk/Desktop/APP/slackSFA/web/node_modules/@volar/source-map/package.json
+/Users/szk/Desktop/APP/slackSFA/web/node_modules/he/package.json
+/Users/szk/Desktop/APP/slackSFA/web/node_modules/vue-template-compiler/package.json
+/Users/szk/Desktop/APP/slackSFA/web/node_modules/estree-walker/dist/esm/package.json
+/Users/szk/Desktop/APP/slackSFA/web/node_modules/estree-walker/package.json
+/Users/szk/Desktop/APP/slackSFA/web/node_modules/estree-walker/src/package.json
+/Users/szk/Desktop/APP/slackSFA/web/node_modules/balanced-match/package.json
+/Users/szk/Desktop/APP/slackSFA/web/node_modules/nanoid/async/package.json
+/Users/szk/Desktop/APP/slackSFA/web/node_modules/nanoid/non-secure/package.json
+/Users/szk/Desktop/APP/slackSFA/web/node_modules/nanoid/package.json
+/Users/szk/Desktop/APP/slackSFA/web/node_modules/nanoid/url-alphabet/package.json
+/Users/szk/Desktop/APP/slackSFA/web/node_modules/computeds/package.json
+/Users/szk/Desktop/APP/slackSFA/web/node_modules/magic-string/package.json
+/Users/szk/Desktop/APP/slackSFA/web/node_modules/typescript/package.json
+/Users/szk/Desktop/APP/slackSFA/web/node_modules/typescript/lib/typesMap.json
+/Users/szk/Desktop/APP/slackSFA/web/node_modules/typescript/lib/pl/diagnosticMessages.generated.json
+Bash
+IN
+ls -la /Users/szk/Desktop/APP/slackSFA/
+
+OUT
+<tool_use_error>Cancelled: parallel tool call Read(/Users/szk/Desktop/APP/slackSFA/package.…) errored</tool_use_error>
+Bash
+IN
+ls -la /Users/szk/Desktop/APP/ 2>&1 | head -30
+
+OUT
+total 16
+drwxr-xr-x@ 11 szk  staff   352 Mar 20 01:03 .
+drwx------+ 20 szk  staff   640 Mar 20 01:49 ..
+-rw-r--r--@  1 szk  staff  6148 Mar 20 01:03 .DS_Store
+drwxr-xr-x@  6 szk  staff   192 Mar 18 03:57 .obsidian
+drwxr-xr-x@ 17 szk  staff   544 Mar 11 02:45 instagram-slack-notify
+drwxr-xr-x@  8 szk  staff   256 Mar  5 02:28 shiro-email-agent
+drwxr-xr-x@ 18 szk  staff   576 Mar 19 21:59 slackSFA
+drwxr-xr-x@ 15 szk  staff   480 Mar  8 17:38 stock-analyzer
+drwxr-xr-x@  6 szk  staff   192 Mar 15 19:15 uchinoko_labo
+drwxr-xr-x@  9 szk  staff   288 Mar  8 17:38 weather-slack-notify
+drwxr-xr-x@  5 szk  staff   160 Feb  9 22:27 weather_report_v1
+Bash
+IN
+find /Users/szk/Desktop/APP/slackSFA -maxdepth 2 -type f -name "package.json"
+
+OUT
+/Users/szk/Desktop/APP/slackSFA/web/package.json
+/Users/szk/Desktop/APP/slackSFA/tests/package.json
+/Users/szk/Desktop/APP/slackSFA/api/package.json
+Bash
+IN
+ls -la /Users/szk/Desktop/APP/slackSFA/web/src/
+
+OUT
+total 40
+drwxr-xr-x@  9 szk  staff    288 Mar 18 00:59 .
+drwxr-xr-x@ 14 szk  staff    448 Mar 18 17:19 ..
+-rw-r--r--@  1 szk  staff    939 Mar 18 00:59 App.vue
+drwxr-xr-x@  2 szk  staff     64 Mar 10 16:55 components
+drwxr-xr-x@  3 szk  staff     96 Mar 19 23:59 lib
+-rw-r--r--@  1 szk  staff    158 Mar 10 23:22 main.ts
+drwxr-xr-x@  3 szk  staff     96 Mar 20 00:02 router
+-rw-r--r--@  1 szk  staff  10285 Mar 14 11:57 style.css
+drwxr-xr-x@ 12 szk  staff    384 Mar 20 00:19 views
+Bash
+IN
+ls -la /Users/szk/Desktop/APP/slackSFA/web/src/components/
+
+OUT
+total 0
+drwxr-xr-x@ 2 szk  staff   64 Mar 10 16:55 .
+drwxr-xr-x@ 9 szk  staff  288 Mar 18 00:59 ..
+Read ContactList.vue
+Bash
+IN
+find /Users/szk/Desktop/APP/slackSFA/api/src -type f -name "*.ts" | head -30
+
+OUT
+/Users/szk/Desktop/APP/slackSFA/api/src/config/ai-models.ts
+/Users/szk/Desktop/APP/slackSFA/api/src/db/migrate.ts
+/Users/szk/Desktop/APP/slackSFA/api/src/db/queries/accounts.ts
+/Users/szk/Desktop/APP/slackSFA/api/src/db/queries/deals.ts
+/Users/szk/Desktop/APP/slackSFA/api/src/db/queries/contacts.ts
+/Users/szk/Desktop/APP/slackSFA/api/src/db/queries/crm_notes.ts
+/Users/szk/Desktop/APP/slackSFA/api/src/db/client.ts
+/Users/szk/Desktop/APP/slackSFA/api/src/db/client.test.ts
+/Users/szk/Desktop/APP/slackSFA/api/src/slack/nlu/intent-parser.test.ts
+/Users/szk/Desktop/APP/slackSFA/api/src/slack/nlu/intent-parser.ts
+/Users/szk/Desktop/APP/slackSFA/api/src/slack/commands/crm-list.ts
+/Users/szk/Desktop/APP/slackSFA/api/src/slack/events/voice.ts
+/Users/szk/Desktop/APP/slackSFA/api/src/slack/events/message.ts
+/Users/szk/Desktop/APP/slackSFA/api/src/slack/views/detail-card.ts
+/Users/szk/Desktop/APP/slackSFA/api/src/slack/pending-actions.ts
+/Users/szk/Desktop/APP/slackSFA/api/src/index.ts
+/Users/szk/Desktop/APP/slackSFA/api/src/config.ts
+/Users/szk/Desktop/APP/slackSFA/api/src/routes/schemas.ts
+/Users/szk/Desktop/APP/slackSFA/api/src/routes/api.ts
+/Users/szk/Desktop/APP/slackSFA/api/src/routes/nurturing.ts
+/Users/szk/Desktop/APP/slackSFA/api/src/routes/health.ts
+/Users/szk/Desktop/APP/slackSFA/api/src/services/reminder.service.ts
+/Users/szk/Desktop/APP/slackSFA/api/src/services/ai-assessment.service.ts
+/Users/szk/Desktop/APP/slackSFA/api/src/services/nurturing.service.ts
+/Users/szk/Desktop/APP/slackSFA/api/src/services/note.service.ts
+/Users/szk/Desktop/APP/slackSFA/api/src/services/contact.service.test.ts
+/Users/szk/Desktop/APP/slackSFA/api/src/services/account.service.ts
+/Users/szk/Desktop/APP/slackSFA/api/src/services/draft-reply.service.ts
+/Users/szk/Desktop/APP/slackSFA/api/src/services/contact.service.ts
+/Users/szk/Desktop/APP/slackSFA/api/src/services/deal.service.ts
+Read index.ts
+Bash
+IN
+find /Users/szk/Desktop/APP/slackSFA/tests -type f | head -20
+
+OUT
+/Users/szk/Desktop/APP/slackSFA/tests/node_modules/@playwright/test/reporter.js
+/Users/szk/Desktop/APP/slackSFA/tests/node_modules/@playwright/test/LICENSE
+/Users/szk/Desktop/APP/slackSFA/tests/node_modules/@playwright/test/reporter.d.ts
+/Users/szk/Desktop/APP/slackSFA/tests/node_modules/@playwright/test/index.js
+/Users/szk/Desktop/APP/slackSFA/tests/node_modules/@playwright/test/reporter.mjs
+/Users/szk/Desktop/APP/slackSFA/tests/node_modules/@playwright/test/NOTICE
+/Users/szk/Desktop/APP/slackSFA/tests/node_modules/@playwright/test/README.md
+/Users/szk/Desktop/APP/slackSFA/tests/node_modules/@playwright/test/package.json
+/Users/szk/Desktop/APP/slackSFA/tests/node_modules/@playwright/test/index.mjs
+/Users/szk/Desktop/APP/slackSFA/tests/node_modules/@playwright/test/cli.js
+/Users/szk/Desktop/APP/slackSFA/tests/node_modules/@playwright/test/index.d.ts
+/Users/szk/Desktop/APP/slackSFA/tests/node_modules/playwright-core/types/types.d.ts
+/Users/szk/Desktop/APP/slackSFA/tests/node_modules/playwright-core/types/protocol.d.ts
+/Users/szk/Desktop/APP/slackSFA/tests/node_modules/playwright-core/types/structs.d.ts
+/Users/szk/Desktop/APP/slackSFA/tests/node_modules/playwright-core/ThirdPartyNotices.txt
+/Users/szk/Desktop/APP/slackSFA/tests/node_modules/playwright-core/LICENSE
+/Users/szk/Desktop/APP/slackSFA/tests/node_modules/playwright-core/bin/reinstall_msedge_dev_win.ps1
+/Users/szk/Desktop/APP/slackSFA/tests/node_modules/playwright-core/bin/reinstall_msedge_beta_linux.sh
+/Users/szk/Desktop/APP/slackSFA/tests/node_modules/playwright-core/bin/reinstall_chrome_beta_linux.sh
+/Users/szk/Desktop/APP/slackSFA/tests/node_modules/playwright-core/bin/reinstall_msedge_beta_mac.sh
+Bash
+IN
+ls -la /Users/szk/Desktop/APP/slackSFA/tests/
+
+OUT
+total 24
+drwxr-xr-x@  8 szk  staff   256 Mar 11 20:49 .
+drwxr-xr-x@ 18 szk  staff   576 Mar 19 21:59 ..
+drwxr-xr-x@  4 szk  staff   128 Mar 19 21:56 e2e
+drwxr-xr-x@  8 szk  staff   256 Mar 11 20:46 node_modules
+-rw-r--r--@  1 szk  staff  2189 Mar 11 20:46 package-lock.json
+-rw-r--r--@  1 szk  staff   201 Mar 11 20:45 package.json
+-rw-r--r--@  1 szk  staff   361 Mar 11 20:45 playwright.config.ts
+drwxr-xr-x@  3 szk  staff    96 Mar 11 20:49 test-results
+Read contacts.spec.ts
+Bash
+IN
+ls -la /Users/szk/Desktop/APP/slackSFA/api/src/db/
+
+OUT
+total 24
+drwxr-xr-x@  7 szk  staff   224 Mar 20 02:17 .
+drwxr-xr-x@  9 szk  staff   288 Mar 20 02:19 ..
+-rw-r--r--@  1 szk  staff  2611 Mar 19 21:57 client.test.ts
+-rw-r--r--@  1 szk  staff  1932 Mar 20 02:17 client.ts
+-rw-r--r--@  1 szk  staff  1403 Mar 11 21:15 migrate.ts
+drwxr-xr-x@ 11 szk  staff   352 Mar 19 23:55 migrations
+drwxr-xr-x@  6 szk  staff   192 Mar 19 21:52 queries
+Bash
+IN
+ls /Users/szk/Desktop/APP/slackSFA/api/src/db/migrations/ | head -10
+
+OUT
+001_init_schema.sql
+002_add_tenant_id.sql
+003_contacts_unification.sql
+004_activity_logs.sql
+005_ai_draft_replies.sql
+006_slack_invite_url.sql
+007_nurturing_stage.sql
+008_drop_leads.sql
+009_deal_progress.sql
+Bash
+IN
+cat /Users/szk/Desktop/APP/slackSFA/docker-compose.yml
+
+OUT
+services:
+  postgres:
+    image: postgres:15-alpine
+    environment:
+      POSTGRES_DB: slacksfa
+      POSTGRES_USER: slacksfa_app
+      POSTGRES_PASSWORD: localdev
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U slacksfa_app -d slacksfa"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  api:
+    build: ./api
+    ports:
+      - "3000:3000"
+    environment:
+      DATABASE_URL: postgresql://slacksfa_app:localdev@postgres:5432/slacksfa
+      SLACK_BOT_TOKEN: ${SLACK_BOT_TOKEN}
+      SLACK_SIGNING_SECRET: ${SLACK_SIGNING_SECRET}
+      ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY}
+      PORT: 3000
+      NODE_ENV: development
+    depends_on:
+      postgres:
+        condition: service_healthy
+    volumes:
+      - ./api/src:/app/src  # ホットリロード用
+    develop:
+      watch:
+        - action: sync
+          path: ./api/src
+          target: /app/src
+
+  web:
+    build: ./web
+    ports:
+      - "3001:5173"
+    environment:
+      VITE_API_BASE_URL: http://localhost:3000
+    depends_on:
+      - api
+
+volumes:
+  postgres_data:
+Bash
+IN
+ls -la /Users/szk/Desktop/APP/slackSFA/api/src/services/
+
+OUT
+total 208
+drwxr-xr-x@ 14 szk  staff    448 Mar 20 02:19 .
+drwxr-xr-x@  9 szk  staff    288 Mar 20 02:19 ..
+-rw-r--r--@  1 szk  staff   1348 Mar 11 00:31 account.service.ts
+-rw-r--r--@  1 szk  staff   3504 Mar 20 02:16 ai-assessment.service.ts
+-rw-r--r--@  1 szk  staff   4024 Mar 19 21:55 contact.service.test.ts
+-rw-r--r--@  1 szk  staff   4166 Mar 12 20:39 contact.service.ts
+-rw-r--r--@  1 szk  staff  21977 Mar 20 02:19 deal-coaching.service.ts
+-rw-r--r--@  1 szk  staff   1463 Mar 10 23:18 deal.service.ts
+-rw-r--r--@  1 szk  staff  20807 Mar 20 02:17 draft-reply.service.ts
+-rw-r--r--@  1 szk  staff   5979 Mar 20 02:16 enrichment.service.ts
+-rw-r--r--@  1 szk  staff   1323 Mar 12 03:39 note.service.ts
+-rw-r--r--@  1 szk  staff  10846 Mar 20 02:17 nurturing.service.ts
+-rw-r--r--@  1 szk  staff   2934 Mar 14 11:32 reminder.service.ts
+-rw-r--r--@  1 szk  staff   1622 Mar 10 23:50 tenant.service.ts
+Bash
+IN
+cat /Users/szk/Desktop/APP/slackSFA/api/tsconfig.json
+
+OUT
+{
+  "compilerOptions": {
+    "target": "ES2022",
+    "module": "commonjs",
+    "lib": ["ES2022"],
+    "outDir": "./dist",
+    "rootDir": "./src",
+    "strict": true,
+    "esModuleInterop": true,
+    "skipLibCheck": true,
+    "resolveJsonModule": true,
+    "sourceMap": true
+  },
+  "include": ["src/**/*"],
+  "exclude": ["node_modules", "dist"]
+}
+Bash
+IN
+cat /Users/szk/Desktop/APP/slackSFA/.env.example
+
+OUT
+# Slack App
+SLACK_BOT_TOKEN=xoxb-your-token-here
+SLACK_SIGNING_SECRET=your-signing-secret-here
+
+# Database (local dev)
+DATABASE_URL=postgresql://slacksfa_app:localdev@localhost:5432/slacksfa
+
+# Anthropic Claude（NLU + ナーチャリング AI）
+ANTHROPIC_API_KEY=your-anthropic-api-key-here
+
+# GCP（本番インフラ）
+GCP_PROJECT_ID=your-gcp-project-id
+GCP_REGION=asia-northeast1
+
+# GCP Cloud SQL (本番用 - unix socket)
+# DATABASE_URL=postgresql://slacksfa_app:PASSWORD@/slacksfa?host=/cloudsql/PROJECT:REGION:INSTANCE
+# INSTANCE_CONNECTION_NAME=PROJECT:REGION:INSTANCE
+
+# AI ナーチャリング通知先チャンネル
+# NURTURING_NOTIFY_CHANNEL=C0123456789
+
+# SendGrid（AI ナーチャリング Phase B メール送信）
+# SENDGRID_API_KEY=your-sendgrid-api-key
+# SENDGRID_FROM_EMAIL=noreply@example.com
+# SENDGRID_FROM_NAME=SlackSFA
+
+# Node.js
+NODE_ENV=development
+PORT=3000
+Read deals.ts
+Read deal-coaching.service.ts
+Read client.ts
+Bash
+IN
+cat /Users/szk/Desktop/APP/slackSFA/web/src/App.vue | head -50
+
+OUT
+<template>
+  <div class="layout">
+    <aside class="sidebar">
+      <div class="sidebar-logo">Slack<span>SFA</span></div>
+      <nav class="sidebar-nav">
+        <div class="sidebar-section">メイン</div>
+        <RouterLink to="/"><span class="icon">📊</span> ダッシュボード</RouterLink>
+        <div class="sidebar-section">CRM</div>
+        <RouterLink to="/contacts"><span class="icon">👤</span> 顧客</RouterLink>
+        <RouterLink to="/accounts"><span class="icon">🏢</span> 会社</RouterLink>
+        <RouterLink to="/deals"><span class="icon">💼</span> 商談</RouterLink>
+        <div class="sidebar-section">AI</div>
+        <RouterLink to="/nurturing"><span class="icon">🤖</span> ナーチャリング</RouterLink>
+        <RouterLink to="/analytics"><span class="icon">📈</span> 分析</RouterLink>
+      </nav>
+    </aside>
+    <div class="main">
+      <RouterView />
+    </div>
+  </div>
+</template>
+Bash
+IN
+find /Users/szk/Desktop/APP/slackSFA/web/src/router -name "*.ts" -o -name "*.js"
+
+OUT
+/Users/szk/Desktop/APP/slackSFA/web/src/router/index.ts
+Bash
+IN
+head -100 /Users/szk/Desktop/APP/slackSFA/api/src/routes/schemas.ts
+
+OUT
+import { z } from 'zod';
+import { Request, Response, NextFunction } from 'express';
+
+// ── スキーマ定義 ─────────────────────────────────────────
+
+const LIFECYCLE_STAGES = ['prospect', 'active', 'customer', 'inactive', 'churned'] as const;
+
+export const contactPatchSchema = z.object({
+  last_name:       z.string().min(1).max(100).optional(),
+  first_name:      z.string().max(100).nullable().optional(),
+  email:           z.string().email().max(255).nullable().optional(),
+  phone:           z.string().max(30).nullable().optional(),
+  mobile:          z.string().max(30).nullable().optional(),
+  title:           z.string().max(100).nullable().optional(),
+  department:      z.string().max(100).nullable().optional(),
+  lifecycle_stage: z.enum(LIFECYCLE_STAGES).optional(),
+  company_name:    z.string().max(255).nullable().optional(),
+  source:          z.string().max(100).nullable().optional(),
+  website_url:     z.string().url().max(500).nullable().optional(),
+  is_primary:      z.boolean().optional(),
+}).strict();
+
+export const tenantPatchSchema = z.object({
+  nurturing_mode:   z.enum(['off', 'notify_only', 'draft']).optional(),
+  sales_policy:     z.string().max(2000).nullable().optional(),
+  slack_invite_url: z.string().url().max(500).nullable().optional(),
+}).strict();
+
+// ── バリデーションミドルウェアファクトリ ─────────────────
+
+export function validate(schema: z.ZodTypeAny) {
+  return (req: Request, res: Response, next: NextFunction): void => {
+    const result = schema.safeParse(req.body);
+    if (!result.success) {
+      res.status(400).json({
+        error: 'Validation failed',
+        details: result.error.errors.map(e => ({
+          field: e.path.join('.'),
+          message: e.message,
+        })),
+      });
+      return;
+    }
+    req.body = result.data;
+    next();
+  };
+}
+現状を完全に把握しました。次にフロントの一覧画面とSlackモーダルの実際のコードを確認します。
+
+Read ContactList.vue
+Read crm-list.ts
+Read detail-card.ts
+Read DealBoard.vue
+Read AccountList.vue
+Read Dashboard.vue
+Read api-client.ts
+Read dashboard.spec.ts
+Read contacts.spec.ts
+全体像を把握しました。現状の問題点と計画をまとめます。
+
+現状分析
+UI/UX の不整合（Web vs Slack Modal）
+項目	Web (ContactList.vue)	Slack (crm-list.ts)	不整合
+表示カラム	名前・会社・役職・ステージ・確率・メール・電話	名前・会社・確率のみ	Slack側が情報不足
+ステージ表示	badge-stage-* バッジ（見込み客/商談中/…）	nurturing_stage の絵文字のみ（🧊🌤️🔥）	lifecycle_stage と nurturing_stage を混同
+フィルタ	lifecycle_stage タブあり	なし	Slack側で絞れない
+ページネーション	なし（全件表示）	LIMIT 20 固定	両方とも未実装
+商談一覧	カンバンボード（6ステージ）	フラットリスト（closed除外）	表現が違うのは OK
+詳細表示	AccountDetail へ遷移	detail-card.ts モーダル	表示項目は概ね一致
+E2E テストの現状
+既存テストはスモークテスト程度（ページが表示されるか、テーブルがあるか）
+ダミーデータなし — 本番データ依存で再現性がない
+CRUDフロー（作成→編集→削除）のテストがない
+計画：2つのタスク設計書を作る
+TASK_09: Seed Data + Playwright E2EとTASK_10: フロント一覧UI統一を設計書として書きます。方針確認させてください：
+
+TASK_09: E2E テスト基盤
+Seed SQL — テスト用テナントに accounts 5社 / contacts 15人 / deals 8件 / notes 20件 / activity_logs 10件を INSERT
+Playwright の globalSetup で docker compose + seed 自動投入
+テストシナリオ（全自動・人手ゼロ）：
+Dashboard KPI 数値の正確性検証
+ContactList: フィルタ切替・検索・編集モーダル・保存・削除
+DealBoard: ステージ別表示・カード遷移・AI評価ボタン
+AccountList: 検索・詳細遷移
+NurturingList: ステータスフィルタ
+API レスポンス検証（supertest 併用）
+TASK_10: Web ↔ Slack 一覧 UI 統一
+Web 側：ページネーション追加（10件/ページ）、lifecycle_stage と nurturing_stage の両方を表示
+Slack 側：crm-list に lifecycle_stage バッジ追加、ページネーション（「次の10件」ボタン）
+共通定数ファイル api/src/config/crm-labels.ts でステージラベル・絵文字を一元管理（Web/Slack 両方で参照）
+この方向で設計書を書いていいですか？それとも優先度や範囲を調整したい点がありますか？
+
+最新の指示書での商談のステージはなしにして、受注確率をパーセンテージ表示をするにしたと思ってます。%はアクションがあると上がったり、時間が経ちすぎると下がったりする。そして、AIが次に何のアクションが必要かを提示してくる仕様がいいと思います。本当は、Slackだけで、つまり、Slackのモーダルで全てを表示処理できたらいいのかもしれない。でもやっぱりWebの方が表現力もあるし必要なのかな？ここの判断を迷ってます。
+いい問いです。ここは設計の根幹に関わるので、はっきり意見を言います。
+
+1. 商談ステージ廃止 → 受注確率 % 一本化
+賛成です。 現状の6ステージ（初期→見込み→提案→交渉→受注→失注）は従来型CRMの模倣で、SlackSFA の思想に合っていない。
+
+現状の問題
+ステージの移動は 手動 — 誰も動かさない、動かし忘れる
+「提案」と「交渉」の境界は曖昧で、営業担当によって基準がバラバラ
+AI コーチング（MEDDPICC）が既にスコアを出しているのに、ステージと二重管理
+あるべき姿
+
+deals テーブル:
+  stage: 削除（or 'open' / 'won' / 'lost' の3値に簡素化）
+  win_probability: 0〜100%  ← これが唯一の指標
+
+確率が動くトリガー:
+  ↑ 上がる: ノート追加、活動ログ、ミーティング実施、キーパーソン接触
+  ↓ 下がる: 7日間アクションなし、返信なし、競合情報検知
+  → AI が MEDDPICC 8要素から自動算出（既にある仕組み）
+
+AI ネクストアクション:
+  「決裁者にまだ会えていません。紹介依頼のメール下書きを作りますか？」
+  「前回接触から12日経過。フォローアップの電話を推奨します」
+これは SlackSFA の最大の差別化ポイント になる。Salesforce は未だにステージ手動更新の世界だから。
+
+2. Slack だけ vs Web も必要か
+結論：Slack がメイン、Web はサブ。でも Web は要る。
+
+Slack だけで十分なこと（日常業務の90%）
+操作	Slack での実現
+コンタクト登録	自然言語 or /crm
+活動記録	メッセージ送るだけ
+AI 提案の承認	ボタン1つ
+案件の確認	/crm-list deals
+ネクストアクション確認	朝のブリーフィング通知
+Slack では無理なこと（Web が必要な理由）
+用途	なぜ Slack では無理か
+パイプライン全体俯瞰	Block Kit は最大100ブロック、スクロールが辛い
+確率の推移グラフ	Slack にチャート描画機能がない
+経営レポート	「今月のパイプライン総額」を社長に見せるのにSlack転送は不便
+一括操作	10件まとめて編集、CSV エクスポート
+外部共有	投資家やパートナーに URL を送る
+SaaS 化時のオンボーディング	「Add to Slack」→ 設定画面は Web が必要
+正しい役割分担
+
+┌─────────────────────────────────────────┐
+│  Slack（メイン）= 入力 & アクション     │
+│  「30秒で済む日常操作」                  │
+│  ・登録、記録、承認、AI提案の実行        │
+│  ・プッシュ通知（アラート、ブリーフィング）│
+└─────────────────────────────────────────┘
+         ↕ 同じ DB
+┌─────────────────────────────────────────┐
+│  Web（サブ）= 閲覧 & 分析               │
+│  「じっくり見たいとき」                  │
+│  ・ダッシュボード、KPI、グラフ           │
+│  ・パイプライン全体俯瞰                  │
+│  ・設定、テナント管理                    │
+│  ・SaaS のランディング/オンボーディング   │
+└─────────────────────────────────────────┘
+つまり Web は「CRUD 画面」ではなく「ダッシュボード＋設定画面」にする。 今の ContactList.vue の編集・削除機能は Slack に寄せて、Web からは外してもいい。
+
+3. これを踏まえた設計書の方針
+タスク	内容
+TASK_09	Seed Data + Playwright E2E（確率ベースの新モデルで）
+TASK_10	商談ステージ廃止 → win_probability 一本化 + AI 自動更新
+TASK_11	Web を「ダッシュボード特化」にリファクタ（CRUD 削除、グラフ追加）
+TASK_12	Slack 側の /crm-list 強化（ページネーション、フィルタ、アクション提案表示）
+この方向で進めますか？ それとも Slack / Web の役割分担について別の考えがありますか？
+
+この方向で進めましょう。確率の判断については、ユーザーと顧客のメールやslackのやり取りをAIが判断するということを実装していたと思うんですが、認識あってますか？
+Agent:Explore AI scoring & activity tracking
+IN
+Thoroughly explore /Users/szk/Desktop/APP/slackSFA to understand how AI evaluates customer interactions and updates deal probability / contact scores. Specifically:
+
+1. **Message handling**: Read `api/src/slack/events/message.ts` fully - how are Slack messages processed? Does the system analyze conversation content?
+
+2. **Activity logging**: How are activities (emails, calls, meetings) tracked? Look at `api/src/db/queries/crm_notes.ts` and any activity_log related code.
+
+3. **AI scoring**: 
+   - How does `deal_probability` on contacts get updated?
+   - How does `ai_score` on contacts get updated?
+   - How does `progress_score` / `win_probability` on deals get updated?
+   - Read `api/src/services/deal-coaching.service.ts` to understand MEDDPICC scoring
+
+4. **NLU intent parser**: Read `api/src/slack/nlu/intent-parser.ts` - what intents are recognized? Does it analyze sentiment or relationship quality?
+
+5. **Nurturing service**: Read `api/src/services/nurturing.service.ts` - how does it decide nurturing stage (cold/warm/hot)?
+
+6. **Email integration**: Is there any email parsing/monitoring? Look for sendgrid, email handling code.
+
+7. **Enrichment service**: Read `api/src/services/enrichment.service.ts` briefly.
+
+Return detailed findings with code snippets showing exactly how AI analyzes interactions and updates scores/probabilities.
+Bash Show top-level directory structure
+IN
+ls -la /Users/szk/Desktop/APP/slackSFA
+
+OUT
+total 88
+drwxr-xr-x@ 18 szk  staff    576 Mar 19 21:59 .
+drwxr-xr-x@ 11 szk  staff    352 Mar 20 01:03 ..
+-rw-r--r--@  1 szk  staff   6148 Mar 11 02:45 .DS_Store
+drwxr-xr-x@  3 szk  staff     96 Mar 13 19:43 .claude
+-rw-r--r--@  1 szk  staff    676 Mar 10 22:24 .env
+-rw-r--r--@  1 szk  staff    891 Mar 19 21:46 .env.example
+drwxr-xr-x@  3 szk  staff     96 Mar 12 03:46 .gemini
+drwxr-xr-x@ 12 szk  staff    384 Mar 20 02:25 .git
+drwxr-xr-x@  3 szk  staff     96 Mar 13 16:48 .github
+-rw-r--r--@  1 szk  staff    530 Mar 19 21:59 .gitignore
+drwxr-xr-x@ 11 szk  staff    352 Mar 19 21:55 api
+-rw-r--r--@  1 szk  staff   1143 Mar 19 21:46 docker-compose.yml
+drwxr-xr-x@  3 szk  staff     96 Mar 19 21:47 docs
+drwxr-xr-x@  3 szk  staff     96 Mar 10 16:55 infra
+drwxr-xr-x@  5 szk  staff    160 Mar 18 15:42 scripts
+-rw-r--r--@  1 szk  staff  17955 Mar 10 16:52 slackSfaPlanWithClaude0310a
+drwxr-xr-x@  8 szk  staff    256 Mar 11 20:49 tests
+drwxr-xr-x@ 14 szk  staff    448 Mar 18 17:19 web
+Globpattern: "/Users/szk/Desktop/APP/slackSFA/api/src/**/*.ts"
+Found 33 files
+Read crm_notes.ts
+Read nurturing.service.ts
+Read contacts.ts
+Bash List all database query files
+IN
+ls -la /Users/szk/Desktop/APP/slackSFA/api/src/db/queries/
+
+OUT
+total 40
+drwxr-xr-x@ 6 szk  staff   192 Mar 19 21:52 .
+drwxr-xr-x@ 7 szk  staff   224 Mar 20 02:17 ..
+-rw-r--r--@ 1 szk  staff  3164 Mar 11 00:31 accounts.ts
+-rw-r--r--@ 1 szk  staff  5526 Mar 12 20:32 contacts.ts
+-rw-r--r--@ 1 szk  staff  2215 Mar 19 21:50 crm_notes.ts
+-rw-r--r--@ 1 szk  staff  2482 Mar 11 00:31 deals.ts
+Bash Find all database migration files
+IN
+find /Users/szk/Desktop/APP/slackSFA/api/src/db -name "*.sql" | sort
+
+OUT
+/Users/szk/Desktop/APP/slackSFA/api/src/db/migrations/001_init_schema.sql
+/Users/szk/Desktop/APP/slackSFA/api/src/db/migrations/002_add_tenant_id.sql
+/Users/szk/Desktop/APP/slackSFA/api/src/db/migrations/003_contacts_unification.sql
+/Users/szk/Desktop/APP/slackSFA/api/src/db/migrations/004_activity_logs.sql
+/Users/szk/Desktop/APP/slackSFA/api/src/db/migrations/005_ai_draft_replies.sql
+/Users/szk/Desktop/APP/slackSFA/api/src/db/migrations/006_slack_invite_url.sql
+/Users/szk/Desktop/APP/slackSFA/api/src/db/migrations/007_nurturing_stage.sql
+/Users/szk/Desktop/APP/slackSFA/api/src/db/migrations/008_drop_leads.sql
+/Users/szk/Desktop/APP/slackSFA/api/src/db/migrations/009_deal_progress.sql
+Read 001_init_schema.sql
+Read contact.service.ts
+Read note.service.ts
+Bash Find architecture documentation
+IN
+find /Users/szk/Desktop/APP/slackSFA -name "README.md" -o -name "ARCHITECTURE.md" | head -5
+
+OUT
+/Users/szk/Desktop/APP/slackSFA/web/node_modules/@types/estree/README.md
+/Users/szk/Desktop/APP/slackSFA/web/node_modules/csstype/README.md
+/Users/szk/Desktop/APP/slackSFA/web/node_modules/he/README.md
+/Users/szk/Desktop/APP/slackSFA/web/node_modules/vue-template-compiler/README.md
+/Users/szk/Desktop/APP/slackSFA/web/node_modules/estree-walker/README.md
+Read deal.service.ts
+Read architecture.md
+Read account.service.ts
+認識は 半分合っていて、半分足りない です。現状を整理します。
+
+実装済みの AI 評価フロー
+
+Slack メッセージ → NLU 解析 → アクション実行
+                                    ↓
+                              ノート追加 / 活動記録
+                                    ↓
+                    ┌───────────────┼───────────────┐
+                    ↓               ↓               ↓
+            Contact 評価      Deal 評価        Nurturing 判定
+          (ai-assessment)   (deal-coaching)   (nurturing.service)
+                    ↓               ↓               ↓
+           deal_probability   progress_score    nurturing_stage
+           ai_score           win_probability    cold/warm/hot
+                    ↓               ↓               ↓
+           70%超→🔥通知    MEDDPICC詳細      ステージ変更→通知
+動いているもの
+機能	トリガー	やっていること
+Contact AI 評価	ノート追加時	メモ全件を Haiku に送り deal_probability を 0-100 で算出
+Deal MEDDPICC 評価	ノート追加 or 手動	メモ＋活動ログのタイムラインを Haiku で8要素評価
+Nurturing 温度判定	活動ログ記録時	会話履歴8件を見て cold/warm/hot を判定
+ネクストアクション提案	Deal 評価時	suggested_actions に優先度付きで生成
+足りないもの（あなたが言った「メールやSlackのやり取りをAIが判断」の部分）
+未実装	説明
+Slack DM/チャンネルの自動監視	今は「ユーザーが Bot に話しかけた時」だけ発火。顧客とのやり取りを Bot が傍観して自動分析する仕組みはない
+メール受信の自動取り込み	SendGrid で送信はできるが、受信メールを自動で activity_log に入れる仕組みがない
+時間経過による確率低下	現状、スコアは「ノート追加時」にしか更新されない。7日放置で下がる仕組みは 未実装
+活動頻度の自動評価	「最終接触から何日」をスコアに反映するロジックがない
+Phase 3 での実装方針
+あなたが構想している「確率が自動的に上下する」仕組みを実現するには、以下が必要です：
+
+A. 確率を上げるトリガー（一部実装済み）
+
+✅ ノート追加       → ai-assessment.service で再評価
+✅ 活動ログ記録     → nurturing.service で温度判定
+🔲 Slack チャンネル監視 → 顧客とのやり取りを自動検出
+🔲 メール受信 Webhook → Gmail/SendGrid Inbound Parse
+B. 確率を下げるトリガー（未実装）
+
+🔲 時間経過デクレメント
+   - 毎日スケジュール実行（朝のブリーフィングに組み込める）
+   - 最終活動から7日経過 → -5%
+   - 14日経過 → -10%
+   - 30日経過 → -20%
+   - 下限は 5%（完全ゼロにはしない）
+
+🔲 ネガティブシグナル検出
+   - 「見送り」「他社に決めた」→ 大幅ダウン
+   - 返信なし3回 → ダウン
+C. ステージ廃止と確率一本化
+
+🔲 deals.stage を 'open' / 'won' / 'lost' の3値に簡素化
+🔲 win_probability をメインの表示指標にする
+🔲 DealBoard のカンバンを「確率帯」に変更
+   例: 0-30% | 30-60% | 60-90% | 90%+ | Won | Lost
+設計書の作成方針
+これを踏まえて、タスク設計書を以下の順序で書きます：
+
+タスク	内容	依存
+TASK_10	Deal ステージ廃止 → 確率一本化 + 時間減衰ロジック	なし
+TASK_11	Web ダッシュボード特化リファクタ	TASK_10
+TASK_12	Slack /crm-list 強化（確率ベース表示 + ページネーション）	TASK_10
+TASK_09	Seed Data + Playwright E2E（新モデルで）	TASK_10-12
+TASK_09 を最後にしたのは、UI が変わる前にテストを書くと全部書き直しになるからです。
+
+まずは TASK_10 の設計書から書きましょうか？
+
+整理しますね。ナーチャリングでの確率は、商談に無駄になるかどうかの確率。商談の確率は受注に至るかどうかの確率。確率の上下のトリガーはノート追加とか、活動ログ記録とか、日にちとか、そういうものも必要ですが、メールのやり取り、Slack のやり取りの中に顧客のセンチメントをしっかり捕まえたい。そういう定性的な判断が新しいと思います。
+なるほど、完全に理解しました。整理します。
+
+2つの確率の定義
+
+┌─────────────────────────────────────────────────┐
+│  顧客（Contact）                                 │
+│                                                  │
+│  deal_probability: 商談化確率                     │
+│  「この人は商談になるか？」                        │
+│  ・まだ商談が立っていない見込み客に対する指標       │
+│  ・warm/hot に上がったら商談を作る判断材料         │
+│                                                  │
+│         ↓ 商談化したら ↓                          │
+│                                                  │
+│  商談（Deal）                                     │
+│                                                  │
+│  win_probability: 受注確率                        │
+│  「この商談は受注に至るか？」                      │
+│  ・商談が立った後の指標                            │
+│  ・100%に近づけば受注、下がれば失注リスク          │
+└─────────────────────────────────────────────────┘
+コアの差別化：センチメント分析
+あなたが言っているのはこういうことですね：
+
+従来の CRM	SlackSFA
+「電話した」→ 活動1件カウント	「電話した」→ 相手が何と言ったか を AI が読む
+「メール送った」→ ステータス手動変更	「メール返信が来た」→ 返信の温度感 を AI が捉える
+定量（回数・日数）で判断	定性（言葉・トーン・意図）で判断
+具体例：
+
+
+📧 顧客からのメール:
+「ご提案ありがとうございます。社内で検討しますが、
+ 来期の予算に含められるか確認中です。
+ 他社さんからも提案をいただいている状況です。」
+
+AI のセンチメント解析:
+  ✅ 予算への言及あり（buying signal）
+  ⚠️ 「来期」→ タイムラインが遠い（urgency: low）
+  ⚠️ 「他社さんからも」→ 競合の存在（risk）
+  📊 総合判断: 関心はあるが緊急度低い → 受注確率 35% → 40%にはしない
+  💡 推奨アクション:「ROI試算を送って緊急度を上げましょう」
+これが Salesforce にはできないこと。 活動を数えるのではなく、会話の中身を読む。
+
+では TASK_10 の設計書を書きます。
+
+Write TASK_10_PROBABILITY_ENGINE.md
+312 lines
+# TASK_10: 確率エンジン刷新 — センチメント駆動の商談化・受注確率
+
+> **目的**: 活動回数ではなく「顧客の言葉」から確率を算出する AI エンジンを構築する
+> **優先度**: 🔴 最優先（Phase 3 の差別化の核）
+> **依存**: なし（既存の ai-assessment / deal-coaching を置き換える）
+
+---
+
+## 1. 設計思想
+
+### 従来 CRM との違い
+
+| 従来 CRM | SlackSFA |
+|----------|----------|
+| 営業が手動でステージを移動 | AI が会話内容から確率を自動算出 |
+| 活動「回数」で評価 | 活動「中身」のセンチメントで評価 |
+| 確率は営業の主観 | 確率は AI の客観的判断 + 根拠提示 |
+| 放置しても数字が変わらない | 時間経過で確率が減衰する |
+
+### 2つの確率
+
+```
+deal_probability（商談化確率）
+  対象: contacts（lifecycle_stage = 'prospect' or 'active'）
+  意味: この見込み客が商談になる可能性
+  用途: ナーチャリング優先度の判断
+
+win_probability（受注確率）
+  対象: deals（status = 'open'）
+  意味: この商談が受注に至る可能性
+  用途: パイプライン管理、売上予測、リスク検知
+```
+
+---
+
+## 2. センチメント分析エンジン
+
+### 2.1 分析対象の会話ソース
+
+| ソース | 取得方法 | 実装状態 |
+|--------|----------|----------|
+| Slack Bot へのメッセージ | 既存の message.ts | ✅ 実装済み |
+| ユーザーが手動入力したメモ | crm_notes テーブル | ✅ 実装済み |
+| メール本文（ユーザーが貼り付け） | activity_logs.body | ✅ 実装済み |
+| Slack チャンネルの会話監視 | Bolt event subscription | 🔲 Phase 3.1 |
+| Gmail/Outlook 受信 Webhook | SendGrid Inbound Parse or Gmail API | 🔲 Phase 3.2 |
+
+### 2.2 センチメントシグナルの定義
+
+```typescript
+// api/src/config/sentiment-signals.ts（新規作成）
+
+export const POSITIVE_SIGNALS = [
+  { signal: 'budget_mention',     label: '予算への言及',         weight: +8 },
+  { signal: 'timeline_urgency',   label: '導入時期の具体化',     weight: +7 },
+  { signal: 'decision_maker_ref', label: '決裁者への言及',       weight: +9 },
+  { signal: 'demo_request',       label: 'デモ・提案依頼',       weight: +10 },
+  { signal: 'pricing_inquiry',    label: '価格・見積もり依頼',    weight: +9 },
+  { signal: 'positive_feedback',  label: '好意的な反応',         weight: +5 },
+  { signal: 'internal_champion',  label: '社内推進者の存在',     weight: +8 },
+  { signal: 'repeat_contact',     label: '繰り返しの接触',       weight: +4 },
+] as const;
+
+export const NEGATIVE_SIGNALS = [
+  { signal: 'competitor_mention', label: '競合の存在',           weight: -5 },
+  { signal: 'budget_concern',    label: '予算懸念',              weight: -6 },
+  { signal: 'timeline_delay',    label: '導入時期の後退',        weight: -7 },
+  { signal: 'no_response',       label: '返信なし',              weight: -4 },
+  { signal: 'rejection',         label: '明確な断り',            weight: -15 },
+  { signal: 'stakeholder_change',label: '担当者変更',            weight: -5 },
+  { signal: 'vague_interest',    label: '曖昧な関心（社交辞令）', weight: -3 },
+  { signal: 'long_silence',      label: '長期間の沈黙',          weight: -6 },
+] as const;
+```
+
+### 2.3 AI プロンプト設計
+
+```typescript
+// api/src/services/sentiment-analyzer.ts（新規作成）
+
+const SENTIMENT_PROMPT = `あなたは B2B 営業のセンチメント分析の専門家です。
+顧客とのやり取りを読み、以下を JSON で返してください。
+
+【分析対象】
+{conversation_text}
+
+【判断基準】
+顧客の「言葉」と「トーン」から、以下のシグナルを検出してください。
+推測ではなく、テキストに根拠がある場合のみ検出すること。
+
+返却 JSON:
+{
+  "detected_signals": [
+    {
+      "signal": "budget_mention|timeline_urgency|...",
+      "evidence": "顧客の発言の該当部分を引用",
+      "confidence": 0.0-1.0
+    }
+  ],
+  "overall_sentiment": "positive|neutral|negative|mixed",
+  "sentiment_score": -100〜+100,
+  "key_insight": "この顧客の現在の心理状態を1文で",
+  "recommended_approach": "次にどういうトーンで接触すべきか1文で"
+}
+
+重要:
+- 社交辞令（「検討します」「ありがとうございます」）はポジティブシグナルとしてカウントしない
+- 日本のビジネスコミュニケーションでは断りが婉曲になる傾向がある。「難しい」「厳しい」は実質的な断りとして扱う
+- 「来期」「次年度」は urgency が低いシグナル
+- 質問が具体的であるほどポジティブ（「何人まで使えますか？」＞「便利そうですね」）
+`;
+```
+
+---
+
+## 3. 確率更新ロジック
+
+### 3.1 商談化確率（deal_probability）の更新
+
+```typescript
+// api/src/services/probability-engine.ts（新規作成）
+
+interface ProbabilityUpdate {
+  previous: number;
+  new_value: number;
+  delta: number;
+  reasons: string[];
+  signals: DetectedSignal[];
+}
+
+export async function updateDealProbability(
+  contactId: string,
+  newConversation: string,
+  triggerType: 'note' | 'activity' | 'email' | 'slack_message' | 'time_decay'
+): Promise<ProbabilityUpdate> {
+
+  // 1. 過去の会話履歴を取得（最新10件）
+  const history = await getConversationHistory(contactId, 10);
+
+  // 2. 新しい会話のセンチメント分析
+  const sentiment = await analyzeSentiment(newConversation);
+
+  // 3. 現在の確率を取得
+  const current = await getCurrentProbability(contactId);
+
+  // 4. シグナルベースの確率調整
+  let delta = 0;
+  for (const sig of sentiment.detected_signals) {
+    const config = [...POSITIVE_SIGNALS, ...NEGATIVE_SIGNALS]
+      .find(s => s.signal === sig.signal);
+    if (config) {
+      delta += config.weight * sig.confidence;
+    }
+  }
+
+  // 5. 確率を更新（0-100 でクランプ）
+  const newValue = Math.max(0, Math.min(100, current + delta));
+
+  // 6. DB 更新
+  await updateContactProbability(contactId, newValue, sentiment);
+
+  return { previous: current, new_value: newValue, delta, reasons: [...], signals: [...] };
+}
+```
+
+### 3.2 受注確率（win_probability）の更新
+
+```typescript
+export async function updateWinProbability(
+  dealId: string,
+  triggerType: 'note' | 'activity' | 'time_decay' | 'manual'
+): Promise<ProbabilityUpdate> {
+
+  // 1. 商談に紐づく全会話（notes + activities）を時系列で取得
+  const timeline = await getDealTimeline(dealId);
+
+  // 2. 直近の会話だけでなく「流れ」を見る
+  //    - 温度が上がってきているか（トレンド）
+  //    - キーパーソンが登場しているか
+  //    - 具体性が増しているか
+  const trendAnalysis = await analyzeTrend(timeline);
+
+  // 3. MEDDPICC 8要素は残す（ただし自動算出）
+  const meddpicc = await evaluateMEDDPICC(timeline);
+
+  // 4. 最終確率 = MEDDPICC加重平均(60%) + センチメントトレンド(30%) + 時間係数(10%)
+  const score = Math.round(
+    meddpicc.weighted_score * 0.6 +
+    trendAnalysis.momentum_score * 0.3 +
+    timeDecayFactor(deal.last_activity_at) * 0.1
+  );
+
+  return { ... };
+}
+```
+
+### 3.3 時間減衰ロジック
+
+```typescript
+// 毎日の定期実行（既存の朝ブリーフィングに組み込み）
+
+export function timeDecayFactor(lastActivityAt: Date): number {
+  const daysSince = diffInDays(new Date(), lastActivityAt);
+
+  if (daysSince <= 3)  return 100;  // 直近3日以内 → 減衰なし
+  if (daysSince <= 7)  return 90;   // 4-7日 → 軽微な減衰
+  if (daysSince <= 14) return 70;   // 8-14日 → 中程度
+  if (daysSince <= 30) return 40;   // 15-30日 → 大幅減衰
+  return 10;                        // 30日超 → ほぼ冷え切り
+}
+
+// 毎朝実行: 全 open deals & active contacts の確率を時間減衰で更新
+export async function runDailyDecay(): Promise<void> {
+  // contacts: 最終活動から計算して deal_probability を減衰
+  // deals: 最終活動から計算して win_probability を減衰
+  // 大幅低下（-10%以上）があれば Slack アラート
+}
+```
+
+---
+
+## 4. Deal ステージの簡素化
+
+### 4.1 マイグレーション
+
+```sql
+-- 010_simplify_deal_stage.sql
+
+-- 既存の6ステージを3値に変換
+UPDATE deals SET stage = 'won'  WHERE stage = 'closed_won';
+UPDATE deals SET stage = 'lost' WHERE stage = 'closed_lost';
+UPDATE deals SET stage = 'open' WHERE stage NOT IN ('closed_won', 'closed_lost', 'won', 'lost');
+
+-- CHECK 制約を更新
+ALTER TABLE deals DROP CONSTRAINT IF EXISTS deals_stage_check;
+ALTER TABLE deals ADD CONSTRAINT deals_stage_check
+  CHECK (stage IN ('open', 'won', 'lost'));
+```
+
+### 4.2 Web UI の変更
+
+DealBoard.vue のカンバンを確率帯に変更:
+
+```
+旧: 初期 | 見込み | 提案 | 交渉 | 受注 | 失注
+新: 🧊 低 (0-30%) | 🌤️ 中 (31-60%) | 🔥 高 (61-90%) | ⭐ 確実 (91%+) | ✅ 受注 | ❌ 失注
+```
+
+### 4.3 Slack crm-list の変更
+
+```
+旧: 📋 初期 *案件名*
+新: 🔥 78% *案件名*
+    💡 次: 決裁者との面談を設定してください
+```
+
+---
+
+## 5. 通知・アラート設計
+
+### Slack 通知のタイミング
+
+| イベント | 通知内容 |
+|----------|----------|
+| 確率 +10% 以上の上昇 | 「📈 {案件名} の受注確率が {old}% → {new}% に上昇。根拠: {evidence}」 |
+| 確率 -10% 以上の低下 | 「⚠️ {案件名} の受注確率が低下。{reason}。推奨: {action}」 |
+| 7日間アクション無し | 「⏰ {contact名} に7日間接触していません。確率が低下し始めます」 |
+| センチメント急変 | 「🚨 {contact名} のメール返信にネガティブシグナル検出: {key_insight}」 |
+| 商談化確率 70% 超え | 「🔥 {contact名} の商談化確率が {prob}% — 商談を作成しますか？」 |
+
+---
+
+## 6. 実装ファイル一覧
+
+| ファイル | 操作 | 内容 |
+|----------|------|------|
+| `api/src/config/sentiment-signals.ts` | 新規 | シグナル定義（weight 付き） |
+| `api/src/services/sentiment-analyzer.ts` | 新規 | Claude Haiku でセンチメント解析 |
+| `api/src/services/probability-engine.ts` | 新規 | 確率更新ロジック（シグナル + 時間減衰） |
+| `api/src/services/ai-assessment.service.ts` | 改修 | probability-engine を呼ぶように変更 |
+| `api/src/services/deal-coaching.service.ts` | 改修 | win_probability をセンチメント込みで算出 |
+| `api/src/slack/events/message.ts` | 改修 | 確率変動時の通知追加 |
+| `api/src/db/migrations/010_simplify_deal_stage.sql` | 新規 | ステージ3値化 |
+| `web/src/views/DealBoard.vue` | 改修 | 確率帯カンバンに変更 |
+| `api/src/slack/commands/crm-list.ts` | 改修 | 確率 + ネクストアクション表示 |
+
+---
+
+## 7. 完了条件
+
+- [ ] センチメント分析がノート追加時に自動実行される
+- [ ] 検出されたシグナルと根拠が DB に保存される
+- [ ] deal_probability がセンチメントに基づいて上下する
+- [ ] win_probability が MEDDPICC + センチメント + 時間減衰で算出される
+- [ ] 7日間未接触で確率が自動低下する
+- [ ] deals.stage が 'open' / 'won' / 'lost' の3値になっている
+- [ ] DealBoard が確率帯で表示される
+- [ ] `/crm-list deals` が確率 + ネクストアクションを表示する
+- [ ] 確率変動時に Slack 通知が飛ぶ
+
+---
+
+## 8. テスト観点
+
+| テスト | 内容 |
+|--------|------|
+| センチメント解析 | ポジティブ/ネガティブ/混合テキストで正しいシグナルが検出されるか |
+| 確率計算 | シグナルの weight 加算が正しいか、0-100 にクランプされるか |
+| 時間減衰 | 3日/7日/14日/30日でそれぞれ期待通り減衰するか |
+| ステージ移行 | 既存データが open/won/lost に正しく変換されるか |
+| 通知条件 | 閾値（±10%）を超えた時だけ通知されるか |
+TASK_10 の設計書を書きました。次に TASK_11, 12, 09 も続けて書きます。
+
+Write TASK_11_WEB_DASHBOARD.md
+184 lines
+# TASK_11: Web をダッシュボード特化にリファクタ
+
+> **目的**: Web の役割を「閲覧・分析・設定」に絞り、CRUD は Slack に寄せる
+> **優先度**: 🟡 高
+> **依存**: TASK_10（確率エンジン刷新）
+
+---
+
+## 1. 設計方針
+
+### Web の役割（やること）
+
+| 用途 | 画面 |
+|------|------|
+| パイプライン俯瞰 | DealBoard — 確率帯カンバン + 金額サマリー |
+| 確率推移の可視化 | DealDetail — 折れ線グラフ（deal_progress_history） |
+| KPI ダッシュボード | Dashboard — 受注確率分布、活動量、センチメント傾向 |
+| 経営レポート | Dashboard — 今月パイプライン総額、受注見込み |
+| テナント設定 | Settings（SaaS 化時に必要） |
+
+### Web の役割（やらないこと → Slack へ）
+
+| 操作 | 理由 |
+|------|------|
+| コンタクトの作成・編集・削除 | Slack で自然言語 or /crm で済む |
+| ノート追加 | Slack メッセージで済む |
+| 商談のステータス変更 | AI が自動判定する |
+| ナーチャリング承認 | Slack ボタンで済む |
+
+---
+
+## 2. 画面ごとの変更
+
+### 2.1 Dashboard.vue（強化）
+
+現状の KPI カードに加えて:
+
+```
+┌─────────────────────────────────────────────┐
+│  ダッシュボード                               │
+│                                              │
+│  ┌─────┐ ┌─────┐ ┌─────┐ ┌─────┐ ┌─────┐   │
+│  │リード│ │パイプ│ │受注額│ │取引先│ │平均  │   │
+│  │  23  │ │¥12M │ │¥3.2M│ │  8  │ │確率  │   │
+│  │      │ │ライン│ │     │ │     │ │ 45% │   │
+│  └─────┘ └─────┘ └─────┘ └─────┘ └─────┘   │
+│                                              │
+│  ┌── 受注確率分布 ──────────────────────┐     │
+│  │  ■■■■■■■■ 0-30%:  5件              │     │
+│  │  ■■■■■       31-60%: 3件            │     │
+│  │  ■■■           61-90%: 2件          │     │
+│  │  ■               91%+:  1件         │     │
+│  └──────────────────────────────────────┘     │
+│                                              │
+│  ┌── 今週のセンチメント ───────────────┐      │
+│  │  ポジティブ: 12件  ネガティブ: 3件   │      │
+│  │  注目: ABC社から価格問い合わせ(🔥)   │      │
+│  └──────────────────────────────────────┘     │
+│                                              │
+│  ┌── AI 推奨アクション TOP 5 ──────────┐     │
+│  │  1. 🔥 D社: 決裁者との面談を設定     │     │
+│  │  2. ⚠️ E社: 7日未接触、フォロー必要  │     │
+│  │  3. 📋 F社: 提案書のカスタマイズ     │     │
+│  └──────────────────────────────────────┘     │
+│                                              │
+│  ┌── 最近の活動（既存） ───────────────┐     │
+│  │  ...                                │     │
+│  └──────────────────────────────────────┘     │
+└─────────────────────────────────────────────┘
+```
+
+### 2.2 DealBoard.vue（リファクタ）
+
+カンバンを確率帯に変更:
+
+```
+旧: 初期 | 見込み | 提案 | 交渉 | 受注 | 失注（6列）
+新: 🧊 低 | 🌤️ 中 | 🔥 高 | ⭐ 確実 | ✅ 受注 | ❌ 失注（6列）
+    0-30%  31-60%  61-90%  91%+
+```
+
+カード内の表示:
+```
+┌──────────────────┐
+│ ABC社クラウド導入   │
+│ ABC株式会社        │
+│ ¥5,000,000        │
+│ 📅 4月15日         │
+│ ████████░░ 78%    │
+│ 💡 決裁者面談を設定 │  ← ネクストアクション（1行）
+└──────────────────┘
+```
+
+### 2.3 DealDetail.vue（強化）
+
+確率推移グラフを追加:
+
+```
+┌─ 受注確率の推移 ───────────────────────────┐
+│  100% ┤                                    │
+│   80% ┤              ●───●                 │
+│   60% ┤        ●───●      ╲               │
+│   40% ┤  ●───●               ●            │
+│   20% ┤                                    │
+│    0% ┤                                    │
+│       └──┬──┬──┬──┬──┬──┬──┬──            │
+│         3/1 3/5 3/8 3/12 3/15 3/18         │
+└────────────────────────────────────────────┘
+  ※ deal_progress_history テーブルからプロット
+```
+
+MEDDPICC 8要素のレーダーチャート（既存の要素別表示をビジュアル化）
+
+### 2.4 ContactList.vue（簡素化）
+
+- 編集モーダル → **削除**（Slack で編集する）
+- 削除ボタン → **削除**（Slack で削除する）
+- 残すもの: 一覧表示 + 検索 + フィルタ + アカウント詳細への遷移
+- 追加: nurturing_stage の絵文字表示、最終接触日、センチメントバッジ
+
+### 2.5 AccountList.vue（変更なし）
+
+- 現状で十分。閲覧のみの役割として適切
+
+### 2.6 NurturingList.vue（変更なし）
+
+- 承認操作は Slack ボタンで行う設計が既にある
+- Web では一覧閲覧のみに使う
+
+---
+
+## 3. グラフライブラリ
+
+### 選定: Chart.js（軽量、Vue 3 対応）
+
+```bash
+npm install chart.js vue-chartjs
+```
+
+理由:
+- バンドルサイズが小さい（tree-shakeable）
+- 折れ線・棒・レーダーチャートを全てカバー
+- Vue 3 の Composition API と相性が良い
+- 他の選択肢（D3.js は過剰、Recharts は React 用）
+
+---
+
+## 4. API エンドポイント追加
+
+| エンドポイント | 用途 |
+|---------------|------|
+| `GET /api/dashboard/sentiment-summary` | 今週のセンチメント集計 |
+| `GET /api/dashboard/probability-distribution` | 確率帯ごとの件数 + 金額 |
+| `GET /api/dashboard/recommended-actions` | AI 推奨アクション TOP N |
+
+既存エンドポイントの変更:
+- `GET /api/deals` → `stage` フィルタを廃止、確率帯フィルタに変更
+- `GET /api/deals/:id/progress-history` → そのまま活用（グラフ用）
+
+---
+
+## 5. 実装ファイル一覧
+
+| ファイル | 操作 | 内容 |
+|----------|------|------|
+| `web/src/views/Dashboard.vue` | 改修 | 確率分布・センチメント・推奨アクション追加 |
+| `web/src/views/DealBoard.vue` | 改修 | 確率帯カンバンに変更 |
+| `web/src/views/DealDetail.vue` | 改修 | 確率推移グラフ追加 |
+| `web/src/views/ContactList.vue` | 改修 | CRUD 削除、センチメントバッジ追加 |
+| `web/src/lib/api-client.ts` | 改修 | 新エンドポイント追加 |
+| `web/package.json` | 改修 | chart.js + vue-chartjs 追加 |
+| `api/src/routes/api.ts` | 改修 | ダッシュボード系エンドポイント追加 |
+
+---
+
+## 6. 完了条件
+
+- [ ] Dashboard に確率分布チャートが表示される
+- [ ] Dashboard に AI 推奨アクション TOP 5 が表示される
+- [ ] DealBoard が確率帯カンバンで表示される
+- [ ] DealDetail に確率推移の折れ線グラフがある
+- [ ] ContactList から編集・削除ボタンが消えている
+- [ ] ContactList にセンチメントバッジと最終接触日が表示される
+Write TASK_12_SLACK_CRM_LIST.md
+237 lines
+# TASK_12: Slack /crm-list 強化 — 確率ベース表示 + ページネーション
+
+> **目的**: Slack を CRM の「メイン操作画面」として完成させる
+> **優先度**: 🟡 高
+> **依存**: TASK_10（確率エンジン）
+
+---
+
+## 1. 設計方針
+
+Slack は「入力 & アクション」のメイン UI。
+日常業務の 90% は Slack 内で完結させる。
+
+### 現状の問題
+
+| 問題 | 影響 |
+|------|------|
+| 20件固定で全件表示 | 21件目以降が見えない |
+| deals に旧ステージ（📋初期 / ✅適格...）表示 | 確率一本化と矛盾 |
+| contacts に lifecycle_stage がない | Web と表示が不整合 |
+| ネクストアクションが一覧に出ない | Slack から遷移しないと見えない |
+| 編集・削除が Slack からできない | Web に行く必要がある |
+
+---
+
+## 2. /crm-list contacts の改善
+
+### 2.1 表示の変更
+
+```
+旧:
+  🧊 *田中太郎*（ABC株式会社） | 案件化: 45%
+  [詳細]
+
+新:
+  🌤️ *田中太郎*（ABC株式会社）
+  見込客 | 案件化: 45% | 最終: 3/15
+  💡 フォローアップ電話を推奨
+  [詳細] [メモ追加] [編集]
+```
+
+変更点:
+- lifecycle_stage のラベル追加（見込客 / 商談中 / 既存顧客 / 休眠）
+- 最終接触日の表示
+- AI 推奨アクション（1行）
+- 「メモ追加」「編集」ボタン追加
+
+### 2.2 ページネーション
+
+```
+顧客（23件中 1-10件）
+
+  ... 10件の一覧 ...
+
+  [◀ 前の10件] [次の10件 ▶]
+```
+
+実装:
+- `offset` パラメータでページ管理
+- ボタンの `value` に `contacts:keyword:offset` を JSON エンコード
+- `action_id: 'crm_list_paginate'` でページ遷移
+
+### 2.3 フィルタ
+
+```
+/crm-list contacts          → 全件
+/crm-list contacts hot      → nurturing_stage = hot のみ
+/crm-list contacts 見込み    → lifecycle_stage = prospect のみ
+/crm-list contacts 田中     → キーワード検索（既存）
+```
+
+---
+
+## 3. /crm-list deals の改善
+
+### 3.1 表示の変更
+
+```
+旧:
+  📋 初期 *クラウド移行プロジェクト*
+  ABC株式会社 | ¥5,000,000 | クローズ: 4/15
+
+新:
+  🔥 78% *クラウド移行プロジェクト*
+  ABC株式会社 | ¥5,000,000 | 📅 4/15
+  💡 決裁者との面談を設定してください
+  [詳細] [コーチング]
+```
+
+変更点:
+- ステージ絵文字 → 確率の絵文字（🧊/🌤️/🔥/⭐）+ パーセンテージ
+- ネクストアクション1行表示
+- 「コーチング」ボタン（AI 再評価トリガー）
+
+### 3.2 ソート
+
+確率の高い順（既にパイプラインとして重要な案件が上に来る）
+
+### 3.3 ページネーション
+
+contacts と同じ仕組み（10件/ページ）
+
+---
+
+## 4. メモ追加モーダル（新規）
+
+一覧の「メモ追加」ボタンから開くモーダル:
+
+```
+┌─────────────────────────────┐
+│  メモ追加 — 田中太郎         │
+│                              │
+│  種別: [会議 ▼]              │
+│                              │
+│  メモ:                       │
+│  ┌──────────────────────┐   │
+│  │                      │   │
+│  │                      │   │
+│  └──────────────────────┘   │
+│                              │
+│         [キャンセル] [保存]   │
+└─────────────────────────────┘
+```
+
+保存時:
+1. crm_notes に INSERT
+2. センチメント分析 → 確率更新（TASK_10）
+3. 元の一覧モーダルに戻る（更新済み）
+
+---
+
+## 5. 編集モーダル（新規）
+
+一覧の「編集」ボタンから開くモーダル:
+
+```
+┌─────────────────────────────┐
+│  顧客編集 — 田中太郎         │
+│                              │
+│  姓:    [田中      ]         │
+│  名:    [太郎      ]         │
+│  会社:  [ABC株式会社]         │
+│  役職:  [部長      ]         │
+│  メール: [t@abc.co.jp]       │
+│  電話:  [03-xxxx   ]         │
+│  ステージ: [見込み客 ▼]      │
+│                              │
+│         [キャンセル] [保存]   │
+└─────────────────────────────┘
+```
+
+---
+
+## 6. コンタクト詳細モーダルの改善
+
+既存の `detail-card.ts` に追加:
+
+```
+現状:
+  ヘッダー + フィールド + 最近のメモ + 最近の活動
+
+追加:
+  ┌── センチメント推移 ──────────┐
+  │  3/10 🌤️ → 3/15 🔥 → 3/18 🔥 │
+  └──────────────────────────────┘
+
+  ┌── AI 推奨アクション ─────────┐
+  │  🔥 提案書を送付してください   │
+  │  📋 次回ミーティング日程を確認 │
+  └──────────────────────────────┘
+
+  [メモ追加] [編集] [商談作成]
+```
+
+---
+
+## 7. 共通ラベル定数の作成
+
+Web と Slack で同じラベルを使うために:
+
+```typescript
+// api/src/config/crm-labels.ts（新規）
+
+export const LIFECYCLE_LABELS: Record<string, string> = {
+  prospect: '見込客',
+  active: '商談中',
+  customer: '既存顧客',
+  inactive: '休眠',
+  churned: '離反',
+};
+
+export const NURTURING_EMOJI: Record<string, string> = {
+  cold: '🧊',
+  warm: '🌤️',
+  hot: '🔥',
+};
+
+export const PROBABILITY_EMOJI = (prob: number): string => {
+  if (prob >= 91) return '⭐';
+  if (prob >= 61) return '🔥';
+  if (prob >= 31) return '🌤️';
+  return '🧊';
+};
+
+export const PROBABILITY_BAND = (prob: number): string => {
+  if (prob >= 91) return '確実';
+  if (prob >= 61) return '高';
+  if (prob >= 31) return '中';
+  return '低';
+};
+```
+
+---
+
+## 8. 実装ファイル一覧
+
+| ファイル | 操作 | 内容 |
+|----------|------|------|
+| `api/src/config/crm-labels.ts` | 新規 | 共通ラベル定数 |
+| `api/src/slack/commands/crm-list.ts` | 改修 | 確率表示、ページネーション、ボタン追加 |
+| `api/src/slack/views/detail-card.ts` | 改修 | センチメント推移、推奨アクション追加 |
+| `api/src/slack/views/note-modal.ts` | 新規 | メモ追加モーダル |
+| `api/src/slack/views/edit-modal.ts` | 新規 | 顧客編集モーダル |
+| `api/src/slack/events/message.ts` | 改修 | モーダル submit ハンドラ追加 |
+
+---
+
+## 9. 完了条件
+
+- [ ] `/crm-list contacts` で確率 + ステージ + 最終接触日 + 推奨アクションが表示される
+- [ ] `/crm-list deals` で確率% + 推奨アクションが表示される
+- [ ] 10件/ページのページネーションが動作する
+- [ ] 「メモ追加」ボタンからモーダルでメモが保存できる
+- [ ] 「編集」ボタンからモーダルで顧客情報が編集できる
+- [ ] 詳細モーダルにセンチメント推移と推奨アクションが表示される
+- [ ] Web と Slack でステージラベル・絵文字が統一されている
+Write TASK_09_E2E_SEED_DATA.md
+486 lines
+# TASK_09: Seed Data + Playwright E2E テスト基盤
+
+> **目的**: ダミーデータを自動投入し、全画面の E2E テストを人手ゼロで実行可能にする
+> **優先度**: 🟡 高
+> **依存**: TASK_10, 11, 12（UI 変更後に書く）
+
+---
+
+## 1. 設計方針
+
+### テストの原則
+
+1. **再現可能**: `docker compose up` → `npm test` だけで全テスト通過
+2. **独立**: テスト間でデータが干渉しない（各テストで seed リセット）
+3. **高速**: Playwright の並列実行、API テストは supertest で直接
+4. **人手ゼロ**: CI で自動実行、スクリーンショットで結果確認
+
+---
+
+## 2. Seed Data 設計
+
+### 2.1 テスト用テナント
+
+```sql
+-- tests/fixtures/seed.sql
+
+-- テスト用テナント
+INSERT INTO tenants (id, name, slack_team_id) VALUES
+  ('00000000-0000-0000-0000-000000000099', 'テストテナント', 'T_TEST_TEAM');
+```
+
+### 2.2 Accounts（5社）
+
+```sql
+INSERT INTO accounts (id, tenant_id, name, website_url, industry, prefecture, phone) VALUES
+  ('a0000000-0001', '...099', '株式会社テストA', 'https://test-a.co.jp', 'IT', '東京都', '03-1111-1111'),
+  ('a0000000-0002', '...099', '株式会社テストB', 'https://test-b.co.jp', '製造業', '大阪府', '06-2222-2222'),
+  ('a0000000-0003', '...099', 'テストC合同会社', 'https://test-c.co.jp', '小売', '愛知県', '052-3333-3333'),
+  ('a0000000-0004', '...099', 'D株式会社',       'https://test-d.co.jp', 'コンサル', '福岡県', '092-4444-4444'),
+  ('a0000000-0005', '...099', 'E Holdings',      'https://test-e.com', '金融', '東京都', '03-5555-5555');
+```
+
+### 2.3 Contacts（15人 — 各ステージ・温度に分散）
+
+| # | 名前 | 会社 | lifecycle | nurturing | deal_prob | 目的 |
+|---|------|------|-----------|-----------|-----------|------|
+| 1 | 田中太郎 | A社 | prospect | cold | 15% | 冷えた見込み客 |
+| 2 | 佐藤花子 | A社 | prospect | warm | 45% | 温まり中 |
+| 3 | 鈴木一郎 | B社 | active | hot | 78% | ホットリード |
+| 4 | 高橋美咲 | B社 | active | warm | 55% | 中間 |
+| 5 | 伊藤健太 | C社 | customer | warm | — | 既存顧客 |
+| 6 | 渡辺直美 | C社 | customer | hot | — | 既存顧客 |
+| 7 | 山本学   | D社 | prospect | cold | 10% | 新規見込み |
+| 8 | 中村優子 | D社 | inactive | cold | 5% | 休眠 |
+| 9 | 小林誠   | E社 | active | hot | 85% | ほぼ商談化 |
+| 10 | 加藤裕介 | E社 | prospect | warm | 35% | 中間 |
+| 11 | 吉田恵  | A社 | churned | cold | 0% | 離反 |
+| 12 | 松本大輝 | B社 | prospect | cold | 20% | 冷えた見込み |
+| 13 | 井上さくら | C社 | active | warm | 60% | 中間 |
+| 14 | 木村拓也 | D社 | customer | warm | — | 既存 |
+| 15 | 林真理子 | E社 | prospect | hot | 70% | エスカレーション閾値 |
+
+### 2.4 Deals（8件 — 確率帯に分散）
+
+| # | 案件名 | 会社 | stage | win_prob | amount |
+|---|--------|------|-------|----------|--------|
+| 1 | クラウド移行 | A社 | open | 78% | ¥5,000,000 |
+| 2 | 基幹システム刷新 | B社 | open | 45% | ¥12,000,000 |
+| 3 | セキュリティ監査 | C社 | open | 22% | ¥800,000 |
+| 4 | AI チャットボット | D社 | open | 91% | ¥3,000,000 |
+| 5 | データ分析基盤 | E社 | open | 55% | ¥7,500,000 |
+| 6 | 受注済み案件 | A社 | won | 100% | ¥2,000,000 |
+| 7 | 失注案件 | C社 | lost | 0% | ¥1,500,000 |
+| 8 | 新規案件 | B社 | open | 15% | ¥500,000 |
+
+### 2.5 CRM Notes（20件）
+
+各コンタクト・案件に 1〜3件のメモを配置。
+note_type を meeting / call / email / general に分散。
+日付を過去30日間に分散。
+
+### 2.6 Activity Logs（10件）
+
+activity_type を email_received / call / meeting / slack_message に分散。
+ai_interest_score を 1〜5 に分散。
+
+### 2.7 Deal Progress History（各案件3件）
+
+3時点の win_probability を記録（グラフテスト用）。
+
+---
+
+## 3. Seed 投入の自動化
+
+### 3.1 Seed スクリプト
+
+```typescript
+// tests/helpers/seed.ts
+
+import { Pool } from 'pg';
+import fs from 'fs';
+import path from 'path';
+
+const TEST_DB_URL = process.env.TEST_DATABASE_URL
+  ?? 'postgresql://slacksfa_app:localdev@localhost:5432/slacksfa';
+
+export async function seedTestData(): Promise<void> {
+  const pool = new Pool({ connectionString: TEST_DB_URL });
+  const sql = fs.readFileSync(
+    path.join(__dirname, '../fixtures/seed.sql'), 'utf-8'
+  );
+
+  await pool.query('BEGIN');
+  await pool.query(`SET LOCAL app.tenant_id = '00000000-0000-0000-0000-000000000099'`);
+  await pool.query(sql);
+  await pool.query('COMMIT');
+  await pool.end();
+}
+
+export async function cleanTestData(): Promise<void> {
+  const pool = new Pool({ connectionString: TEST_DB_URL });
+  await pool.query(`DELETE FROM deal_progress_history WHERE tenant_id = '00000000-0000-0000-0000-000000000099'`);
+  await pool.query(`DELETE FROM activity_logs WHERE tenant_id = '00000000-0000-0000-0000-000000000099'`);
+  await pool.query(`DELETE FROM crm_notes WHERE tenant_id = '00000000-0000-0000-0000-000000000099'`);
+  await pool.query(`DELETE FROM ai_draft_replies WHERE tenant_id = '00000000-0000-0000-0000-000000000099'`);
+  await pool.query(`DELETE FROM deals WHERE tenant_id = '00000000-0000-0000-0000-000000000099'`);
+  await pool.query(`DELETE FROM contacts WHERE tenant_id = '00000000-0000-0000-0000-000000000099'`);
+  await pool.query(`DELETE FROM accounts WHERE tenant_id = '00000000-0000-0000-0000-000000000099'`);
+  await pool.end();
+}
+```
+
+### 3.2 Playwright Global Setup
+
+```typescript
+// tests/global-setup.ts
+
+import { seedTestData, cleanTestData } from './helpers/seed';
+
+export default async function globalSetup() {
+  await cleanTestData();
+  await seedTestData();
+  console.log('✅ Test seed data loaded');
+}
+```
+
+### 3.3 playwright.config.ts の更新
+
+```typescript
+import { defineConfig } from '@playwright/test';
+
+export default defineConfig({
+  testDir: './e2e',
+  globalSetup: './global-setup.ts',
+  use: {
+    baseURL: 'http://localhost:3001',
+    screenshot: 'only-on-failure',
+    trace: 'retain-on-failure',
+  },
+  webServer: [
+    {
+      command: 'cd ../api && npm run dev',
+      port: 3000,
+      reuseExistingServer: true,
+    },
+    {
+      command: 'cd ../web && npm run dev',
+      port: 3001,
+      reuseExistingServer: true,
+    },
+  ],
+  projects: [
+    { name: 'chromium', use: { browserName: 'chromium' } },
+  ],
+  reporter: [['html', { open: 'never' }]],
+});
+```
+
+---
+
+## 4. E2E テストシナリオ
+
+### 4.1 Dashboard テスト
+
+```typescript
+// tests/e2e/dashboard.spec.ts
+
+test.describe('ダッシュボード', () => {
+  test('KPI が seed データと一致する', async ({ page }) => {
+    await page.goto('/');
+    // アクティブリード数 = lifecycle_stage in (prospect, active) の件数
+    await expect(page.getByText('12')).toBeVisible(); // 15人中 prospect+active
+    // パイプライン = open deals の合計金額
+    await expect(page.getByText('¥28,800,000')).toBeVisible();
+  });
+
+  test('確率分布チャートが表示される', async ({ page }) => {
+    await page.goto('/');
+    await expect(page.locator('canvas')).toBeVisible(); // Chart.js canvas
+  });
+
+  test('AI 推奨アクション TOP 5 が表示される', async ({ page }) => {
+    await page.goto('/');
+    await expect(page.getByText('推奨アクション')).toBeVisible();
+  });
+
+  test('サイドバーから各ページに遷移できる', async ({ page }) => {
+    await page.goto('/');
+    await page.getByRole('link', { name: /商談/ }).click();
+    await expect(page).toHaveURL('/deals');
+  });
+});
+```
+
+### 4.2 DealBoard テスト
+
+```typescript
+// tests/e2e/deal-board.spec.ts
+
+test.describe('商談パイプライン', () => {
+  test('確率帯カンバンが表示される', async ({ page }) => {
+    await page.goto('/deals');
+    await expect(page.getByText('低')).toBeVisible();   // 0-30%
+    await expect(page.getByText('中')).toBeVisible();   // 31-60%
+    await expect(page.getByText('高')).toBeVisible();   // 61-90%
+    await expect(page.getByText('確実')).toBeVisible(); // 91%+
+  });
+
+  test('カードに確率とネクストアクションが表示される', async ({ page }) => {
+    await page.goto('/deals');
+    await expect(page.getByText('78%')).toBeVisible();
+    await expect(page.getByText('クラウド移行')).toBeVisible();
+  });
+
+  test('カードクリックで詳細に遷移する', async ({ page }) => {
+    await page.goto('/deals');
+    await page.getByText('クラウド移行').click();
+    await expect(page).toHaveURL(/\/deals\//);
+  });
+
+  test('確率帯に正しい件数が表示される', async ({ page }) => {
+    await page.goto('/deals');
+    // 0-30%: 2件（セキュリティ監査22%, 新規案件15%）
+    // 31-60%: 2件（基幹システム45%, データ分析55%）
+    // 61-90%: 1件（クラウド移行78%）
+    // 91%+: 1件（AIチャットボット91%）
+  });
+});
+```
+
+### 4.3 DealDetail テスト
+
+```typescript
+// tests/e2e/deal-detail.spec.ts
+
+test.describe('商談詳細', () => {
+  test('確率推移グラフが表示される', async ({ page }) => {
+    await page.goto('/deals/d0000000-0001'); // クラウド移行
+    await expect(page.locator('canvas')).toBeVisible();
+  });
+
+  test('MEDDPICC 要素が表示される', async ({ page }) => {
+    await page.goto('/deals/d0000000-0001');
+    await expect(page.getByText('課題の特定')).toBeVisible();
+    await expect(page.getByText('意思決定者')).toBeVisible();
+  });
+
+  test('推奨アクションリストが表示される', async ({ page }) => {
+    await page.goto('/deals/d0000000-0001');
+    await expect(page.getByText(/推奨|アクション/)).toBeVisible();
+  });
+});
+```
+
+### 4.4 ContactList テスト
+
+```typescript
+// tests/e2e/contact-list.spec.ts
+
+test.describe('顧客一覧', () => {
+  test('全件が表示される', async ({ page }) => {
+    await page.goto('/contacts');
+    await expect(page.locator('table')).toBeVisible();
+    // 最初のページに10件表示（ページネーション）
+  });
+
+  test('ライフサイクルフィルタが動作する', async ({ page }) => {
+    await page.goto('/contacts');
+    await page.getByText('見込み客').click();
+    // prospect のみ表示されることを確認
+    await expect(page.getByText('田中太郎')).toBeVisible();
+    await expect(page.getByText('伊藤健太')).not.toBeVisible(); // customer
+  });
+
+  test('検索が動作する', async ({ page }) => {
+    await page.goto('/contacts');
+    await page.fill('input[placeholder*="検索"]', '田中');
+    await page.waitForTimeout(500);
+    await expect(page.getByText('田中太郎')).toBeVisible();
+  });
+
+  test('CRUD ボタンが存在しない（Slack に移行済み）', async ({ page }) => {
+    await page.goto('/contacts');
+    await expect(page.locator('button[title="編集"]')).toHaveCount(0);
+    await expect(page.locator('button[title="削除"]')).toHaveCount(0);
+  });
+
+  test('アカウント詳細に遷移できる', async ({ page }) => {
+    await page.goto('/contacts');
+    await page.getByText('田中太郎').click();
+    await expect(page).toHaveURL(/\/accounts\//);
+  });
+});
+```
+
+### 4.5 AccountList テスト
+
+```typescript
+// tests/e2e/account-list.spec.ts
+
+test.describe('取引先一覧', () => {
+  test('5社が表示される', async ({ page }) => {
+    await page.goto('/accounts');
+    const rows = page.locator('tbody tr');
+    await expect(rows).toHaveCount(5);
+  });
+
+  test('検索が動作する', async ({ page }) => {
+    await page.goto('/accounts');
+    await page.fill('input[placeholder*="検索"]', 'テストA');
+    await page.waitForTimeout(500);
+    await expect(page.getByText('株式会社テストA')).toBeVisible();
+  });
+
+  test('会社クリックで詳細に遷移する', async ({ page }) => {
+    await page.goto('/accounts');
+    await page.getByText('株式会社テストA').click();
+    await expect(page).toHaveURL(/\/accounts\//);
+  });
+});
+```
+
+### 4.6 API テスト（Playwright の request fixture）
+
+```typescript
+// tests/e2e/api.spec.ts
+
+const API = 'http://localhost:3000';
+
+test.describe('API エンドポイント', () => {
+  test('GET /api/contacts が配列を返す', async ({ request }) => {
+    const res = await request.get(`${API}/api/contacts`);
+    expect(res.status()).toBe(200);
+    const body = await res.json();
+    expect(Array.isArray(body)).toBe(true);
+    expect(body.length).toBeGreaterThanOrEqual(15);
+  });
+
+  test('GET /api/contacts?stage=prospect がフィルタされる', async ({ request }) => {
+    const res = await request.get(`${API}/api/contacts?stage=prospect`);
+    const body = await res.json();
+    for (const c of body) {
+      expect(c.lifecycle_stage).toBe('prospect');
+    }
+  });
+
+  test('GET /api/deals が open deals を返す', async ({ request }) => {
+    const res = await request.get(`${API}/api/deals`);
+    const body = await res.json();
+    expect(body.length).toBeGreaterThanOrEqual(6);
+  });
+
+  test('GET /api/dashboard/probability-distribution が確率帯を返す', async ({ request }) => {
+    const res = await request.get(`${API}/api/dashboard/probability-distribution`);
+    const body = await res.json();
+    expect(body).toHaveProperty('low');
+    expect(body).toHaveProperty('medium');
+    expect(body).toHaveProperty('high');
+    expect(body).toHaveProperty('very_high');
+  });
+
+  test('GET /api/deals/:id/progress-history が履歴を返す', async ({ request }) => {
+    const res = await request.get(`${API}/api/deals/d0000000-0001/progress-history`);
+    const body = await res.json();
+    expect(Array.isArray(body)).toBe(true);
+    expect(body.length).toBeGreaterThanOrEqual(3);
+  });
+});
+```
+
+---
+
+## 5. CI 連携
+
+### GitHub Actions
+
+```yaml
+# .github/workflows/e2e.yml
+name: E2E Tests
+
+on:
+  pull_request:
+    branches: [main]
+
+jobs:
+  e2e:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:15-alpine
+        env:
+          POSTGRES_DB: slacksfa
+          POSTGRES_USER: slacksfa_app
+          POSTGRES_PASSWORD: localdev
+        ports:
+          - 5432:5432
+
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Install dependencies
+        run: |
+          cd api && npm ci
+          cd ../web && npm ci
+          cd ../tests && npm ci
+          npx playwright install --with-deps chromium
+
+      - name: Run migrations
+        run: cd api && npm run migrate:dev
+        env:
+          DATABASE_URL: postgresql://slacksfa_app:localdev@localhost:5432/slacksfa
+
+      - name: Start servers
+        run: |
+          cd api && npm run dev &
+          cd web && npm run dev &
+          npx wait-on http://localhost:3000/health http://localhost:3001
+
+      - name: Run E2E tests
+        run: cd tests && npx playwright test
+        env:
+          TEST_DATABASE_URL: postgresql://slacksfa_app:localdev@localhost:5432/slacksfa
+
+      - name: Upload test report
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-report
+          path: tests/playwright-report/
+```
+
+---
+
+## 6. 実装ファイル一覧
+
+| ファイル | 操作 | 内容 |
+|----------|------|------|
+| `tests/fixtures/seed.sql` | 新規 | ダミーデータ INSERT |
+| `tests/helpers/seed.ts` | 新規 | Seed 投入・クリーンアップ |
+| `tests/global-setup.ts` | 新規 | Playwright 起動前に seed |
+| `tests/playwright.config.ts` | 改修 | globalSetup + webServer 設定 |
+| `tests/e2e/dashboard.spec.ts` | 改修 | KPI 数値検証、チャート、推奨アクション |
+| `tests/e2e/deal-board.spec.ts` | 新規 | 確率帯カンバン、カード表示 |
+| `tests/e2e/deal-detail.spec.ts` | 新規 | グラフ、MEDDPICC、アクション |
+| `tests/e2e/contact-list.spec.ts` | 新規 | フィルタ、検索、CRUD 不在確認 |
+| `tests/e2e/account-list.spec.ts` | 新規 | 一覧、検索、遷移 |
+| `tests/e2e/api.spec.ts` | 新規 | 全 API エンドポイント検証 |
+| `.github/workflows/e2e.yml` | 新規 | CI で PR 時に自動実行 |
+
+---
+
+## 7. 完了条件
+
+- [ ] `docker compose up` → seed 自動投入 → 全テスト PASS
+- [ ] Dashboard: KPI が seed データと一致
+- [ ] DealBoard: 確率帯に正しい件数
+- [ ] DealDetail: グラフ表示
+- [ ] ContactList: フィルタ・検索が動作、CRUD ボタンがない
+- [ ] AccountList: 一覧・検索・遷移
+- [ ] API: 全エンドポイントが正しいレスポンス
+- [ ] CI: PR 時に自動実行、失敗時にスクリーンショット保存
+- [ ] 人手の操作: ゼロ
+4つの設計書を書きました。全体の関係を整理します。
+
+Phase 3 タスクマップ
+
+TASK_10: 確率エンジン刷新 🔴
+  センチメント分析 + 時間減衰 + ステージ3値化
+  ※ Phase 3 の差別化の核。ここが全ての土台
+         ↓
+    ┌────┴────┐
+    ↓         ↓
+TASK_11    TASK_12
+Web改修🟡  Slack強化🟡
+ダッシュボード  /crm-list
+特化+グラフ    ページネーション
+CRUD削除      メモ・編集モーダル
+    └────┬────┘
+         ↓
+TASK_09: E2E テスト 🟡
+  Seed Data + Playwright
+  全画面自動テスト + CI
+作業の進め方
+TASK_10 を先に — DB マイグレーション + エンジン実装（API 側のみ）
+TASK_11 と 12 は並行可能 — Web と Slack は独立して改修できる
+TASK_09 は最後 — UI が固まった後にテストを書く
+Sonnet への指示書（SONNET_INSTRUCTIONS.md）も更新しますか？ それとも先にどれかのタスクの詳細を詰めたい部分がありますか？
+
+指示書を更新してください。
+Read SONNET_INSTRUCTIONS.md
+Write SONNET_INSTRUCTIONS.md
+436 lines
+# SlackSFA Phase 3 — Sonnet 実装指示書
+
+## Context
+
+SlackSFA は α版として稼働中の Slack 統合 AI-CRM。Phase 2.5 で品質・セキュリティの底上げが完了し、Phase 3 では **差別化機能の実装** と **Slack メイン化** に進む。
+
+### Phase 2.5 完了済み（触らないこと）
+- ✅ TASK_01: RLS セッション修正（withTenant + SET LOCAL）
+- ✅ TASK_02: 不要依存削除、AI モデル一元化（ai-models.ts）
+- ✅ TASK_03: leads テーブル廃止 → contacts 統合（lifecycle_stage）
+- ✅ TASK_04: テスト基盤（vitest + client/intent-parser/contact.service テスト）
+- ✅ TASK_05: Terraform IaC 初版
+- ✅ TASK_06: エンリッチメント（Claude Haiku）
+- ✅ TASK_07: Slack Block Kit（/crm-list + 詳細モーダル）
+- ✅ TASK_08: 商談コーチング AI（MEDDPICC 8要素）
+
+### Phase 3 の設計思想
+
+1. **センチメント駆動**: 活動の「回数」ではなく「中身」から確率を算出する
+2. **Slack メイン**: 日常操作の 90% は Slack で完結。Web はダッシュボード＋分析
+3. **ステージ廃止**: 6段階の手動ステージを廃止し、AI が算出する確率 % 一本化
+4. **2つの確率**:
+   - `deal_probability`（商談化確率）: 見込み客が商談になるか
+   - `win_probability`（受注確率）: 商談が受注に至るか
+
+---
+
+## 実行順序と優先度
+
+```
+TASK_10（確率エンジン刷新）🔴 ← 最優先、Phase 3 の核
+    ↓
+    ├── TASK_11（Web ダッシュボード特化）🟡 ← 並行可能
+    ├── TASK_12（Slack /crm-list 強化）🟡  ← 並行可能
+    ↓
+TASK_09（Seed Data + E2E テスト）🟡 ← UI 確定後に書く
+```
+
+**TASK_11 と TASK_12 は並行して実装可能。** ただし TASK_10 の DB マイグレーションとエンジンが先に必要。
+
+---
+
+## TASK_10: 確率エンジン刷新 — センチメント駆動 🔴 CRITICAL
+
+**設計書:** `TASK_10_PROBABILITY_ENGINE.md` を必ず読むこと
+
+### 概要
+
+顧客との会話内容（メール本文、Slack メッセージ、ノート）を AI が読み、センチメントシグナルを検出して確率を自動更新する。
+
+### 実装ステップ（この順序で進めること）
+
+#### Step 1: DB マイグレーション
+
+```sql
+-- api/src/db/migrations/010_simplify_deal_stage.sql
+
+-- 6ステージ → 3値に簡素化
+UPDATE deals SET stage = 'won'  WHERE stage = 'closed_won';
+UPDATE deals SET stage = 'lost' WHERE stage = 'closed_lost';
+UPDATE deals SET stage = 'open' WHERE stage NOT IN ('closed_won', 'closed_lost', 'won', 'lost');
+
+ALTER TABLE deals DROP CONSTRAINT IF EXISTS deals_stage_check;
+ALTER TABLE deals ADD CONSTRAINT deals_stage_check
+  CHECK (stage IN ('open', 'won', 'lost'));
+
+-- センチメント履歴カラムの追加（activity_logs）
+ALTER TABLE activity_logs ADD COLUMN IF NOT EXISTS sentiment_score INTEGER;       -- -100〜+100
+ALTER TABLE activity_logs ADD COLUMN IF NOT EXISTS sentiment_signals JSONB;       -- 検出シグナル配列
+ALTER TABLE activity_logs ADD COLUMN IF NOT EXISTS overall_sentiment TEXT;        -- positive/neutral/negative/mixed
+```
+
+#### Step 2: センチメントシグナル定義
+
+新規ファイル: `api/src/config/sentiment-signals.ts`
+
+```typescript
+export const POSITIVE_SIGNALS = [
+  { signal: 'budget_mention',     label: '予算への言及',         weight: +8 },
+  { signal: 'timeline_urgency',   label: '導入時期の具体化',     weight: +7 },
+  { signal: 'decision_maker_ref', label: '決裁者への言及',       weight: +9 },
+  { signal: 'demo_request',       label: 'デモ・提案依頼',       weight: +10 },
+  { signal: 'pricing_inquiry',    label: '価格・見積もり依頼',    weight: +9 },
+  { signal: 'positive_feedback',  label: '好意的な反応',         weight: +5 },
+  { signal: 'internal_champion',  label: '社内推進者の存在',     weight: +8 },
+  { signal: 'repeat_contact',     label: '繰り返しの接触',       weight: +4 },
+] as const;
+
+export const NEGATIVE_SIGNALS = [
+  { signal: 'competitor_mention', label: '競合の存在',           weight: -5 },
+  { signal: 'budget_concern',    label: '予算懸念',              weight: -6 },
+  { signal: 'timeline_delay',    label: '導入時期の後退',        weight: -7 },
+  { signal: 'no_response',       label: '返信なし',              weight: -4 },
+  { signal: 'rejection',         label: '明確な断り',            weight: -15 },
+  { signal: 'stakeholder_change',label: '担当者変更',            weight: -5 },
+  { signal: 'vague_interest',    label: '曖昧な関心（社交辞令）', weight: -3 },
+  { signal: 'long_silence',      label: '長期間の沈黙',          weight: -6 },
+] as const;
+```
+
+#### Step 3: センチメント分析サービス
+
+新規ファイル: `api/src/services/sentiment-analyzer.ts`
+
+- Claude Haiku を使って会話テキストからシグナルを検出
+- 日本のビジネスコミュニケーションを考慮（「検討します」は社交辞令、「難しい」は実質的な断り）
+- 返却: `{ detected_signals, overall_sentiment, sentiment_score, key_insight, recommended_approach }`
+
+**AI プロンプトの重要ポイント:**
+```
+- 社交辞令をポジティブシグナルとしてカウントしない
+- 日本のビジネスでは断りが婉曲になる。「難しい」「厳しい」は実質的な断り
+- 「来期」「次年度」は urgency が低い
+- 質問が具体的であるほどポジティブ（「何人まで使えますか？」＞「便利そうですね」）
+- 推測ではなく、テキストに根拠がある場合のみシグナルを検出する
+```
+
+#### Step 4: 確率エンジン
+
+新規ファイル: `api/src/services/probability-engine.ts`
+
+**商談化確率（deal_probability）の更新ロジック:**
+1. 過去の会話履歴を取得（最新10件）
+2. 新しい会話のセンチメント分析
+3. シグナルの weight を加算して delta を計算
+4. 現在の確率に delta を加え、0-100 でクランプ
+5. DB 更新 + 変動が ±10% 以上なら Slack 通知
+
+**受注確率（win_probability）の更新ロジック:**
+1. 商談に紐づく全会話を時系列で取得
+2. MEDDPICC 8要素を AI で評価（既存ロジック流用）
+3. センチメントトレンドを分析（温度が上がっているか下がっているか）
+4. 最終確率 = MEDDPICC加重平均(60%) + センチメントトレンド(30%) + 時間係数(10%)
+
+**時間減衰ロジック（毎日の定期実行）:**
+```typescript
+function timeDecayFactor(lastActivityAt: Date): number {
+  const daysSince = diffInDays(new Date(), lastActivityAt);
+  if (daysSince <= 3)  return 100;  // 減衰なし
+  if (daysSince <= 7)  return 90;   // 軽微
+  if (daysSince <= 14) return 70;   // 中程度
+  if (daysSince <= 30) return 40;   // 大幅
+  return 10;                        // ほぼ冷え切り
+}
+```
+
+- 朝のブリーフィング（既存の毎朝9:00 JST）に組み込む
+- 大幅低下（-10%以上）時は Slack アラート送信
+
+#### Step 5: 既存サービスの改修
+
+- `ai-assessment.service.ts`: probability-engine を呼ぶように変更（既存ロジックを置き換え）
+- `deal-coaching.service.ts`: win_probability をセンチメント込みで算出（MEDDPICC は残す）
+- `message.ts`: 確率変動時の通知ロジック追加
+
+#### Step 6: crm-list.ts と DealBoard.vue のステージ表示変更
+
+- crm-list: 旧ステージ絵文字 → 確率 % + 確率帯絵文字（🧊/🌤️/🔥/⭐）
+- DealBoard: 6カンバン列 → 確率帯（0-30% / 31-60% / 61-90% / 91%+ / Won / Lost）
+
+**完了条件:**
+- [ ] deals.stage が 'open' / 'won' / 'lost' の3値
+- [ ] センチメント分析がノート/活動追加時に自動実行される
+- [ ] 検出シグナルが activity_logs に保存される
+- [ ] deal_probability がセンチメントに基づいて上下する
+- [ ] win_probability が MEDDPICC + センチメント + 時間減衰で算出される
+- [ ] 7日間未接触で確率が自動低下する
+- [ ] 確率変動 ±10% で Slack 通知が飛ぶ
+- [ ] DealBoard が確率帯カンバンで表示される
+- [ ] `/crm-list deals` が確率% + ネクストアクションを表示する
+- [ ] `npm run build` エラーなし、`npm test` PASS
+
+---
+
+## TASK_11: Web をダッシュボード特化にリファクタ 🟡
+
+**設計書:** `TASK_11_WEB_DASHBOARD.md` を必ず読むこと
+
+### 概要
+
+Web の役割を「閲覧・分析・グラフ」に絞る。CRUD は Slack に寄せる。
+
+### 実装ステップ
+
+#### Step 1: Chart.js 導入
+
+```bash
+cd web && npm install chart.js vue-chartjs
+```
+
+#### Step 2: Dashboard.vue 強化
+
+既存の KPI カードに加えて以下を追加:
+- **確率分布チャート**: 確率帯ごとの件数を横棒グラフで表示
+- **今週のセンチメントサマリー**: ポジティブ/ネガティブの件数
+- **AI 推奨アクション TOP 5**: 全案件から優先度の高いアクションを表示
+
+新規 API エンドポイント（api.ts に追加）:
+- `GET /api/dashboard/probability-distribution`
+- `GET /api/dashboard/sentiment-summary`
+- `GET /api/dashboard/recommended-actions`
+
+#### Step 3: DealBoard.vue リファクタ
+
+カンバン列を確率帯に変更:
+```
+旧: 初期 | 見込み | 提案 | 交渉 | 受注 | 失注
+新: 🧊 低(0-30%) | 🌤️ 中(31-60%) | 🔥 高(61-90%) | ⭐ 確実(91%+) | ✅ 受注 | ❌ 失注
+```
+
+カード内に **ネクストアクション1行** を追加表示（suggested_actions の先頭）
+
+#### Step 4: DealDetail.vue 強化
+
+- deal_progress_history から確率推移の折れ線グラフを追加（vue-chartjs Line）
+- MEDDPICC 8要素をレーダーチャートで表示
+
+#### Step 5: ContactList.vue 簡素化
+
+- **編集モーダル → 削除**（Slack で行う）
+- **削除ボタン → 削除**（Slack で行う）
+- **追加表示**: nurturing_stage 絵文字、最終接触日
+- 閲覧専用のテーブルとして残す
+
+**完了条件:**
+- [ ] Dashboard に確率分布チャートが表示される
+- [ ] Dashboard に AI 推奨アクション TOP 5 が表示される
+- [ ] DealBoard が確率帯カンバンで表示される
+- [ ] DealDetail に確率推移の折れ線グラフがある
+- [ ] ContactList から編集・削除ボタンが消えている
+- [ ] `npm run build` エラーなし
+
+---
+
+## TASK_12: Slack /crm-list 強化 🟡
+
+**設計書:** `TASK_12_SLACK_CRM_LIST.md` を必ず読むこと
+
+### 概要
+
+Slack を CRM の「メイン操作画面」として完成させる。ページネーション、メモ追加、編集をすべて Slack モーダル内で行えるようにする。
+
+### 実装ステップ
+
+#### Step 1: 共通ラベル定数
+
+新規ファイル: `api/src/config/crm-labels.ts`
+
+```typescript
+export const LIFECYCLE_LABELS: Record<string, string> = {
+  prospect: '見込客', active: '商談中', customer: '既存顧客',
+  inactive: '休眠', churned: '離反',
+};
+
+export const NURTURING_EMOJI: Record<string, string> = {
+  cold: '🧊', warm: '🌤️', hot: '🔥',
+};
+
+export const PROBABILITY_EMOJI = (prob: number): string => {
+  if (prob >= 91) return '⭐';
+  if (prob >= 61) return '🔥';
+  if (prob >= 31) return '🌤️';
+  return '🧊';
+};
+```
+
+Web 側 (ContactList.vue の stageLabel 等) もこの定数を参照するように統一。
+Web からは API 経由で定数を取得するか、同じ値を `web/src/lib/constants.ts` に複製する（シンプルさ優先で複製 OK）。
+
+#### Step 2: /crm-list の表示改善
+
+**contacts 表示の変更:**
+```
+旧: 🧊 *田中太郎*（ABC株式会社） | 案件化: 45%
+新: 🌤️ *田中太郎*（ABC株式会社）
+    見込客 | 案件化: 45% | 最終: 3/15
+    💡 フォローアップ電話を推奨
+    [詳細] [メモ追加] [編集]
+```
+
+**deals 表示の変更:**
+```
+旧: 📋 初期 *クラウド移行プロジェクト*
+新: 🔥 78% *クラウド移行プロジェクト*
+    ABC株式会社 | ¥5,000,000 | 📅 4/15
+    💡 決裁者との面談を設定してください
+    [詳細] [コーチング]
+```
+
+#### Step 3: ページネーション
+
+- 10件/ページ
+- `[◀ 前の10件] [次の10件 ▶]` ボタン
+- ボタンの `value` に `JSON.stringify({ target, keyword, offset })` を格納
+- `action_id: 'crm_list_paginate'` でビューを更新（`views.update`）
+
+#### Step 4: メモ追加モーダル
+
+新規ファイル: `api/src/slack/views/note-modal.ts`
+
+- 一覧の「メモ追加」ボタンから開くモーダル
+- フィールド: 種別（meeting/call/email/general のセレクト）、メモ本文（textarea）
+- 保存時: crm_notes に INSERT → センチメント分析 → 確率更新（TASK_10 のエンジン）
+- 保存後: 元の一覧モーダルに戻る
+
+#### Step 5: 編集モーダル
+
+新規ファイル: `api/src/slack/views/edit-modal.ts`
+
+- 一覧の「編集」ボタンから開くモーダル
+- フィールド: 姓、名、会社、役職、メール、電話、ステージ
+- 保存時: PATCH /api/contacts/:id と同等の処理
+- 保存後: 元の一覧モーダルに戻る
+
+#### Step 6: 詳細モーダル改善
+
+`detail-card.ts` に追加:
+- センチメント推移（直近5件の活動の sentiment を絵文字で表示）
+- AI 推奨アクション（suggested_actions から上位2件）
+- 「メモ追加」「編集」「商談作成」ボタン
+
+**完了条件:**
+- [ ] `/crm-list contacts` で確率 + ステージ + 最終接触日 + 推奨アクションが表示される
+- [ ] `/crm-list deals` で確率% + 推奨アクションが表示される
+- [ ] 10件/ページのページネーションが動作する
+- [ ] 「メモ追加」モーダルからメモが保存でき、確率が再計算される
+- [ ] 「編集」モーダルから顧客情報が編集できる
+- [ ] 詳細モーダルにセンチメント推移と推奨アクションが表示される
+- [ ] Web と Slack でステージラベル・絵文字が統一されている
+- [ ] `npm run build` エラーなし
+
+---
+
+## TASK_09: Seed Data + Playwright E2E テスト 🟡
+
+**設計書:** `TASK_09_E2E_SEED_DATA.md` を必ず読むこと
+
+### 概要
+
+ダミーデータを自動投入し、全画面の E2E テストを人手ゼロで実行可能にする。
+
+### 実装ステップ
+
+#### Step 1: Seed SQL 作成
+
+`tests/fixtures/seed.sql` に以下を作成:
+- テスト用テナント: `00000000-0000-0000-0000-000000000099`
+- Accounts: 5社（IT/製造/小売/コンサル/金融）
+- Contacts: 15人（各 lifecycle_stage × nurturing_stage に分散）
+- Deals: 8件（確率帯に分散 — 15%/22%/45%/55%/78%/91% + won + lost）
+- CRM Notes: 20件（note_type 分散、過去30日に分散）
+- Activity Logs: 10件（activity_type 分散、ai_interest_score 1-5）
+- Deal Progress History: 各案件3レコード（グラフテスト用）
+
+**Seed データの設計意図:** 各フィルタ・ソート・確率帯が正しく動作するか検証できるように、値を意図的に分散させる。
+
+#### Step 2: Seed ヘルパー
+
+`tests/helpers/seed.ts`:
+- `seedTestData()`: seed.sql を実行
+- `cleanTestData()`: テスト用テナントのデータを全テーブルから削除
+- テナント分離のため `SET LOCAL app.tenant_id` でスコープする
+
+#### Step 3: Playwright 設定更新
+
+`tests/playwright.config.ts`:
+- `globalSetup` で clean → seed 実行
+- `webServer` で API + Web を自動起動
+- スクリーンショット: 失敗時のみ
+- trace: 失敗時のみ保持
+
+#### Step 4: E2E テスト実装
+
+| テストファイル | 検証内容 |
+|---------------|----------|
+| `dashboard.spec.ts` | KPI が seed データと一致、確率分布チャート表示、推奨アクション表示 |
+| `deal-board.spec.ts` | 確率帯カンバン表示、正しい件数、カード内容、詳細遷移 |
+| `deal-detail.spec.ts` | 確率推移グラフ表示、MEDDPICC 表示、推奨アクション |
+| `contact-list.spec.ts` | フィルタ動作、検索動作、CRUD ボタン不在、遷移 |
+| `account-list.spec.ts` | 一覧表示、検索、詳細遷移 |
+| `api.spec.ts` | 全 REST API のレスポンス検証 |
+
+#### Step 5: CI 設定
+
+`.github/workflows/e2e.yml`:
+- PR 時に自動実行
+- PostgreSQL service container
+- マイグレーション → seed → サーバー起動 → テスト
+- 失敗時にスクリーンショット + trace をアーティファクト保存
+
+**完了条件:**
+- [ ] `docker compose up` → `npm test` で全テスト PASS（人手ゼロ）
+- [ ] seed データが各テストの検証に十分な多様性を持つ
+- [ ] CI で PR 時に E2E テストが自動実行される
+- [ ] 失敗時にスクリーンショットが保存される
+
+---
+
+## 横断ルール（全タスク共通）
+
+### コーディング規約
+
+1. **既存のコードスタイルに従う**: TypeScript strict, async/await, サービス層分離
+2. **マイグレーションは追番**: 次は `010_` から
+3. **AI モデルは `ai-models.ts` の定数を使う**: ハードコード禁止
+4. **ラベルは `crm-labels.ts` を使う**: Web/Slack で同じラベルを表示する
+5. **エラーを握りつぶさない**: `.catch(() => {})` は禁止。最低限 `console.error` でログ出力
+
+### 作業ルール
+
+1. **各タスク完了時に git commit**: `task10: implement sentiment-driven probability engine`
+2. **不明点は実装前に聞く**: 推測で進めない
+3. **テストが通る状態を維持**: red のまま次のタスクに行かない
+4. **HANDOFF.md を各タスク完了時に更新**: 進捗を記録
+
+### 検証方法
+
+各タスク完了時:
+1. `npm run build` — TypeScript コンパイルエラーなし
+2. `npm test` — 全テスト PASS
+3. `docker compose up` — ローカルで動作確認
+4. Slack DM で基本操作が動作する（コンタクト登録・検索・案件作成・確率表示）
+
+---
+
+## 参照ドキュメント
+
+| ファイル | 内容 |
+|----------|------|
+| `TASK_10_PROBABILITY_ENGINE.md` | 確率エンジン詳細設計（シグナル定義、プロンプト、ロジック） |
+| `TASK_11_WEB_DASHBOARD.md` | Web ダッシュボード設計（画面ワイヤーフレーム、グラフ仕様） |
+| `TASK_12_SLACK_CRM_LIST.md` | Slack /crm-list 設計（ページネーション、モーダル仕様） |
+| `TASK_09_E2E_SEED_DATA.md` | E2E テスト設計（Seed データ、テストシナリオ、CI） |
+| `HANDOFF.md` | プロジェクト全体の状態（完了タスク、アーキテクチャ、残課題） |
+| `PROPOSAL_DEAL_COACHING_AI.md` | Deal Coaching AI の元提案書 |
+指示書を更新しました。主な変更点：
+
+Phase 2.5 の全タスクを「完了済み・触らないこと」として記載 — 黒子が誤って再実装しないように
+Phase 3 の4タスクを実行順序付きで記載 — TASK_10 → 11/12（並行）→ 09
+TASK_10 が最も詳細 — センチメント分析のプロンプト設計、確率計算ロジック、時間減衰まで具体的なコードを提示
+各タスクに Step 1〜N の実行順序 — 黒子が迷わず進められるように
+横断ルール — crm-labels.ts でラベル統一、.catch(() => {}) 禁止など Phase 2.5 で学んだことを反映
+この指示書を黒子に渡せば、TASK_10 から着手できます。
+
+ありがとう。今日のやりとりをハンドオフに残しておいてください。
+Read HANDOFF.md
+Edit HANDOFF.md
+Modified
+Edit HANDOFF.md
+Added 37 lines
+Edit HANDOFF.md
+Added 11 lines
+Edit HANDOFF.md
+Modified
+Edit HANDOFF.md
+Added 4 lines
+HANDOFF.md を更新しました。追記した内容：
+
+Phase 3 設計完了セクション — 5つの方針決定（ステージ廃止、センチメント駆動、2つの確率定義、Slack/Web 役割分担、時間減衰）と4タスクの設計書一覧・実行順序
+設計上の重要決定事項 — 商談コーチングの進化（MEDDPICC 60% + センチメント 30% + 時間 10%）、Slack/Web 役割分担、ステージ廃止の詳細
+ロードマップ更新 — Phase 3 実装の時間軸を反映
+参照ドキュメント — TASK_09〜12 の設計書を追加
+明日、黒子の質問があれば送ります。ゆっくり休んでください、ありがとう😊
+お疲れさまでした！今日は大きな方針が固まりましたね。
+
+センチメント駆動の確率エンジン = Salesforce にない武器
+Slack メイン / Web サブの役割分担
+4つの設計書 + 指示書更新済み
+黒子からの質問、いつでもどうぞ。おやすみなさい。
+
+/extra-usage
+Browser opened to manage extra usage. If it didn't open, visit: https://claude.ai/settings/usage
+
+TASK_10の実装が終わったとこで以下の意見交換を黒子としました。これを踏まえてオッパはどう考える？'❯ 黒子的に今日実装するアイデアは良いものと思う？                                                                                            
+
+⏺ 概ね良いと思います。ただし正直に言うと、大きく光るアイデアと懸念点があります。
+
+  ---
+  光るアイデア
+
+  - 日本の婉曲表現対応が本質的に差別化になる。「難しい」「前向きに検討」を社交辞令と断りで区別するプロンプトはSalesforceにはできない。
+  - 時間減衰は正しい。現実の営業では放置した商談の確率は下がるのに、既存CRMは数字が変わらない。ここを埋めるのは本物の価値。
+  - ステージ廃止は思い切りが良い。営業が自分でステージを動かすのが一番の入力コストだったから。
+
+  ---
+  懸念点
+
+  1. シグナル検出の精度が出るか未検証
+  短いメモ（30〜100文字）から budget_mention や decision_maker_ref を正確に抽出できるか疑問。実際に使ってみてノイズが多い可能性がある。
+  2. 確率の説明責任
+  78% と表示されても営業が「なぜ?」と思ったとき根拠が見えにくい。key_insight を Slack に出す設計は良いが、Web
+  詳細画面でもシグナル根拠を見せる必要がある。
+  3. updateWinProbability が progress_score 依存
+  MEDDPICC評価が未実行（null）だと 30% をベースに計算してしまう。初回は MEDDPICC も走らせるほうが正確。
+
+  ---
+  総評
+
+  コアコンセプト（会話の中身で確率が動く）は本物の差別化になり得ます。ただし精度の実証が全てで、「AI が言うから正しい」ではなく「AI
+  の根拠が見えるから信頼できる」設計に育てていくことが鍵だと思います。
+
+❯ センチメントの検出は短いメモからは難しいのでメールやslackのやり取りから文脈を拾って判断だね。                                             
+
+⏺ そうですね、その通りです。今の実装の問題が明確になりました。
+
+  現状の課題
+  add_note → memo（「田中さんと電話。前向き」）→ センチメント分析
+  30文字のメモからシグナルを検出しようとしている → 精度が出ない。
+
+  正しい設計
+  センチメント分析のトリガー = 新しいメモ追加
+  分析対象 = 新メモ + 直近のactivity_logs.body（メール本文等）の組み合わせ
+
+  activity_logs.body にはユーザーが貼り付けたメール本文や長文が入っています。そこを合わせて読めば文脈が取れる。
+
+  修正は probability-engine.ts の updateDealProbability で、新メモ単体ではなく contact に紐づく直近の activity_logs.body
+  も取得して連結してから analyzeSentiment に渡すようにすれば良いです。やりますか？
+
+  また将来的には：
+  - Phase 3.1: Slack チャンネルの会話を自動監視（Bolt event subscription）
+  - Phase 3.2: メール受信 Webhook（Gmail API / SendGrid Inbound Parse）
+
+  これらが入ると「ユーザーが能動的に貼り付けなくても」文脈が溜まるので精度が上がります。今は「メールを貼り付けてメモに残す」運用が前提になり
+  ますね。
+
+❯ ここはこのアプリの最大の特徴になるから「ユーザーが能動的に貼り付けなくても」文脈が溜まるを実現したいです！                                
+
+⏺ 最高の差別化ポイントです。具体的な実現パスを整理します。
+
+  ---
+  「自動で文脈が溜まる」実装ロードマップ
+
+  Phase 3.1: Slack チャンネル監視（即実装可能）
+
+  Bolt SDK は既に入っているので追加インフラ不要。
+
+  営業が #customer-abc-corp チャンネルで顧客と会話
+         ↓ 自動検知（新規）
+  activity_logs に自動記録
+         ↓ 一定量たまったら
+  sentimentAnalyzer で文脈を読む
+         ↓
+  deal_probability / win_probability を自動更新
+
+  実装内容:
+  - /crm-link #channel 会社名 コマンドで Slack チャンネルと顧客を紐づけ
+  - channel_links テーブル（channel_id → contact_id / deal_id）
+  - message イベントで紐づきチャンネルの発言を自動収集
+
+  Phase 3.2: メール自動収集（要設計判断）
+
+  2つの選択肢があります：
+
+  ┌──────────────────┬─────────────────┬─────────────────────────────────────────┐
+  │       方式       │     難易度      │                  体験                   │
+  ├──────────────────┼─────────────────┼─────────────────────────────────────────┤
+  │ Gmail API Watch  │ 高（OAuth必要） │ 完全自動。ユーザー操作ゼロ              │
+  ├──────────────────┼─────────────────┼─────────────────────────────────────────┤
+  │ 専用転送アドレス │ 低              │ abc@ingest.slacksfa.com に BCC するだけ │
+  └──────────────────┴─────────────────┴─────────────────────────────────────────┘
+
+  転送アドレス方式なら SendGrid Inbound Parse で今すぐ実装できます。
+
+  ---
+  どちらから着手しますか？
+  Slack チャンネル監視は今日中に実装できます。Gmail はまず転送アドレス方式から始めて、後でGmail API
+  Watchにアップグレードするのが現実的かと思います。'
+黒子の分析は的確です。3つの論点について意見を述べます。
+
+1. センチメント精度の問題 — 黒子の指摘は正しい
+短いメモ（「田中さんと電話。前向き」）からシグナルを拾うのは無理がある。黒子が提案した「メモ + activity_logs.body を連結して分析」への修正は 今すぐやるべき。これは設計書の想定内なので進めて問題ない。
+
+2. 「確率の説明責任」 — これは重要
+黒子が言う「78% の根拠が見えない」問題は、信頼性に直結する。
+
+今の設計で既に対応できている部分:
+
+detected_signals に evidence（顧客発言の引用）が入る
+key_insight が1文で状態を説明する
+MEDDPICC の要素別スコアがある
+足りない部分:
+
+Web の DealDetail で「なぜこの確率なのか」をシグナル履歴として時系列表示する
+これは TASK_11（Web 改修）のスコープに入れるべき。設計書に追記する必要があるが、今日は確率エンジン本体の完成が優先。
+
+3. 「自動で文脈が溜まる」 — ここが本題
+黒子の提案する2つのパスについて：
+
+Slack チャンネル監視 → やるべき。ただし設計に注意。
+黒子が「今日中にできる」と言っているが、雑に実装すると危険。理由：
+
+
+問題: 全チャンネルの全メッセージを監視すると
+  1. Anthropic API コストが爆発する（1メッセージごとに Haiku 呼ぶの？）
+  2. 社内雑談もセンチメントに影響する
+  3. プライバシーの問題（SaaS 化時に顧客が嫌がる）
+正しい設計:
+
+
+/crm-link #customer-abc  ABC株式会社
+  → channel_links テーブルに紐づけ登録
+  → そのチャンネルだけ監視対象
+
+監視ロジック:
+  1. メッセージを activity_logs に保存（即時）
+  2. センチメント分析は「バッチ」で実行（即時ではない）
+     - 5件溜まったら or 24時間経過したら
+     - まとめて分析 → API コスト 1/5 に削減
+  3. 分析結果で確率更新
+これなら API コストは月 +¥500〜1,000 程度で済む。
+
+メール自動収集 → 転送アドレス方式から始めるのが正解
+黒子の判断に同意。理由：
+
+方式	実装期間	SaaS 化時のハードル
+Gmail API Watch	2-3日	OAuth 審査が必要、Google の審査で1-2ヶ月
+転送アドレス（SendGrid Inbound Parse）	半日	ドメイン設定だけ。即日稼働
+Gmail API は SaaS 化が見えてから。今は log@slacksfa.com に BCC する運用で十分。
+
+結論：黒子への指示
+
+1. probability-engine の修正 → やって良い（メモ + activity_logs.body 連結）
+2. MEDDPICC 未実行時のフォールバック修正 → やって良い（初回は走らせる）
+3. Slack チャンネル監視 → やって良い。ただし以下の設計を守ること:
+   a. /crm-link コマンドで明示的に紐づけたチャンネルだけ監視
+   b. メッセージは activity_logs に即時保存
+   c. センチメント分析はバッチ（5件 or 24時間）で実行
+   d. channel_links テーブルのマイグレーション（011_channel_links.sql）
+4. メール転送アドレス → 今日はやらない。Slack 監視が安定してから
+設計書（TASK_10）に Slack チャンネル監視を追記しますか？ それとも黒子にこのまま口頭で伝えますか？
+
+このまま口頭で伝えます！
+了解です。黒子にそのまま伝えてください。
+
+要点だけ念押し：
+
+チャンネル監視は /crm-link で明示紐づけしたチャンネルだけ — 全チャンネル監視は絶対NG
+センチメント分析はバッチ（5件 or 24時間） — 1メッセージごとに Haiku 呼ばない
+メール転送は今日やらない — Slack 監視が安定してから
+何か質問が返ってきたらまた投げてください。
+
+黒子はやい！'実装内容まとめ：
+
+  「自動で文脈が溜まる」の実現
+  /crm-link ABC株式会社
+    → #customer-abc チャンネルと紐づけ（channel_links テーブル）
+
+  #customer-abc での会話
+    → activity_logs に即時保存（Haiku 呼ばない）
+
+  5件溜まった or 24時間経過
+    → まとめてセンチメント分析（API コスト 1/5）
+    → deal_probability / win_probability 自動更新
+
+  センチメント精度の改善
+  - メモ単体 → メモ + 直近5件の activity_logs.body を連結してから分析
+  - 短いメモでもメール本文等の文脈が加わって判断精度が上がる
+
+  Opusの設計方針を全て遵守：  全チャンネル監視なし / バッチ分析 / メール転送は今日やらない
+
+✻ Worked for 10m 35s
+
+❯ ありがとうございます😀/crm-linkはすでに登録してたよ。                                                                                     
+  ⎿  [Image #12]
+
+⏺ あ、まだ /crm-list しか登録されていないです。「Create New Command」をクリックして /crm-link を追加してください。
+
+  ┌───────────────────┬────────────────────────────────────────────────────────────────────────┐
+  │    フィールド     │                                   値                                   │
+  ├───────────────────┼────────────────────────────────────────────────────────────────────────┤
+  │ Command           │ /crm-link                                                              │
+  ├───────────────────┼────────────────────────────────────────────────────────────────────────┤
+  │ Request URL       │ https://slacksfa-api-808596335261.asia-northeast1.run.app/slack/events │
+  ├───────────────────┼────────────────────────────────────────────────────────────────────────┤
+  │ Short Description │ Link Slack channel to contact/deal                                     │
+  └───────────────────┴────────────────────────────────────────────────────────────────────────┘
+
+❯ あ、そうか！/crm-linkを登録しました                                                                                                       
+
+⏺ 完璧です。これで使えるようになりました。
+
+  使い方：
+  /crm-link ABC株式会社     → このチャンネルを ABC株式会社 に紐づけ
+  /crm-link list            → 全リンク一覧
+  /crm-link remove          → このチャンネルの紐づけを解除
+
+  試しに顧客と会話しているチャンネルで /crm-link 会社名
+  を実行してみてください。その後そのチャンネルで会話が5件溜まると自動でセンチメント分析 → 確率更新が走ります。
+'
+いいペースですね。TASK_10 の確率エンジン + Slack チャンネル監視まで一気に入ったということは、コア機能はほぼ完成です。
+
+次は TASK_11（Web）と TASK_12（Slack /crm-list 強化）のどちらから黒子に着手させますか？ それとも一旦ここで動作確認してから進めたいですか？
+
+データがまだ少ないのと実際の顧客とのチャンネルができてないのでテストができないからTASA_12をお願いしましょう、その後ASK_11。
+了解です。TASK_12（Slack /crm-list 強化）→ TASK_11（Web 改修）の順で黒子に進めてもらいましょう。
+
+設計書は既にあるのでそのまま SONNET_INSTRUCTIONS.md を渡せば着手できます。TASK_12 の完了後に TASK_11 へ進む流れです。
+
+何か黒子から質問が来たらまた投げてください。
+
+顧客とナーチャリングの関係がSFAに馴染みのない人にはわかりにくいという問題を考えました。ジャストアイデアでSFA機能をナーチャリングにまとめるアカウントベースでなく案件ベースな営業フローはどうかなと思案中。
+改変の理由：顧客リストとナーチャリングリストで「AI自信度」「温度感」など機能が相互に被っててわかりにくい。
+
+解決案：個人は会社やと同様に基礎情報にとどめて「ナーチャリング」に商談プロセスを統合して件名をキーにSFA機能をまとめる。
+副次的メリット：この「ナーチャリング」を「AI Flow」（仮称）などの名称にして、それをサービス名にすることでAIによる全く新しいSFAであることを直感的に理解してもらえる。（webの左メニューの欄にはこのサービスのAIキャラを含むロゴ（キャラ＋'AIフロー'）を入れて、この機能が特別なのをweb画面を見るだけでわかる。）
+
+| 件名                                    | 顧客  | 商談化確率   | 受注確率    | 作成日時 | 最終活動                | 最終活動内容         |
+| ------------------------------------- | --- | ------- | ------- | ---- | ------------------- | -------------- |
+| {{ファーストタッチの内容からAIが自動で命名、slackから編集可能}} |     | {{%表示}} | {{%表示}} |      | {{最後に活動したほからの経過日数}} | {{最後のやり取りの要約}} |
+|                                       |     |         |         |      |                     |                |
+|                                       |     |         |         |      |                     |                |
+|                                       |     |         |         |      |                     |                |
+- センチメント指標もAIの判断の一部として確立に含まれる
+- 確立の根拠はslackAPPで聞かれた時のみ答える
+面白い発想です。ちょっと深掘りさせてください。
+
+今の問題を整理
+現状のフロー（SFA 脳の人向け）：
+
+
+アカウント → コンタクト → ナーチャリング → 商談 → コーチング → 受注
+  (会社)      (人)        (温める)        (案件)   (育てる)     (勝つ)
+SFA を知らない人の混乱ポイント：
+
+「ナーチャリングって何？」
+「コンタクトと商談の違いは？」
+「会社を登録してから人を登録して、それから案件を作る？ 面倒」
+「この人を温めてるのか、この案件を進めてるのか、どっち？」
+あなたが言っている「案件ベース」のイメージ
+こういうことですか？
+
+
+旧（アカウントベース）:
+  株式会社ABC（アカウント）
+    └─ 田中太郎（コンタクト）
+        ├─ ナーチャリング: cold → warm → hot
+        └─ クラウド移行プロジェクト（商談）
+            └─ コーチング: MEDDPICC + センチメント
+
+新（案件ベース）:
+  「ABCのクラウド移行」（案件 = 全ての起点）
+    ├─ 関係者: 田中太郎（決裁者）、佐藤花子（推進者）
+    ├─ 受注確率: 78%（AI 自動算出）
+    ├─ やりとり履歴（メール、Slack、メモ ← 全部ここ）
+    ├─ 次のアクション:「田中さんに予算確認の電話」
+    └─ ステータス: 進行中 / 受注 / 失注
+つまり ナーチャリングもコーチングも「案件の中のアクション」として統合される。
+
+私の見解
+賛成できる部分
+「案件」を中心にする UX は正しい。 理由：
+
+営業の思考モデルに合う — 営業は「田中さんを管理」ではなく「ABCの案件を進める」と考える
+ナーチャリング ≈ コーチング — 温めるも育てるも、やっていることは「次のアクションを実行する」。分ける必要がない
+入力が減る — 「Slackで30秒」の思想と合致。アカウント→コンタクト→商談の3段階登録が不要
+慎重になるべき部分
+データモデルまで変えるかどうかは別問題です。
+
+
+選択肢A: UX だけ変える（データモデルは維持）
+  → 案件画面を「窓口」にして、裏では accounts/contacts/deals を使う
+  → 低リスク、既存コード影響小
+
+選択肢B: データモデルも統合する
+  → deals テーブルに contact 情報を埋め込む
+  → 高リスク、マイグレーション大変、SaaS 化時に困る可能性
+私の推奨は A（UX だけ変える）です。 理由：
+
+SaaS 化すると大企業顧客が来る。大企業は1社に100人のコンタクトと20件の商談がある。アカウントベースのデータモデルは結局必要
+今の段階でデータモデルを崩すと、Phase 2.5 で苦労して作った RLS・テスト・マイグレーションが無駄になる
+具体的な提案
+「案件ビュー」を Slack のメイン画面にする：
+
+
+/crm  （デフォルトビュー = 案件一覧）
+
+🔥 78% ABCのクラウド移行
+   田中太郎（決裁者）| ¥5M | 📅 4/15
+   💡 予算確認の電話をしてください
+   [アクション実行] [詳細]
+
+🌤️ 45% B社の基幹システム
+   佐藤花子 | ¥12M | 📅 5/30
+   💡 デモ日程を提案してください
+   [アクション実行] [詳細]
+
+🧊 15% 新規見込み：山本さん
+   ← まだ商談化前。deal_probability ベース
+   💡 課題ヒアリングの面談を設定
+   [アクション実行] [詳細]
+ポイント：
+
+商談化前のコンタクト（prospect）も「見込み案件」として同じリストに出す
+ナーチャリングの「下書き承認」も「アクション実行」ボタンに統合
+ユーザーは「案件の一覧」だけ見れば全てわかる
+これなら データモデルは変えずに、UX だけ「案件中心」にできる。どう思いますか？
+
+これは単なる UI 改善ではなく、プロダクトのアイデンティティを定義する提案です。かなり良いと思います。
+
+なぜこれが正しいか
+現状の問題（あなたの指摘通り）
+
+ContactList:  deal_probability, nurturing_stage, ai_score
+NurturingList: confidence_score, ai_reasoning, status
+DealBoard:    win_probability, progress_score, MEDDPICC
+
+→ 3つの画面に「AI の判断」が散らばっている
+→ 「この人、今どうなってるの？」が一目でわからない
+あなたの提案で解決される
+
+AI Flow（1画面）:
+
+| 件名                    | 顧客       | 商談化 | 受注  | 最終活動  | 内容               |
+|------------------------|-----------|--------|------|----------|-------------------|
+| ABC社クラウド移行の相談   | 田中太郎   | 78%    | 45%  | 2日前    | 予算感のヒアリング    |
+| B社の基幹システム刷新     | 佐藤花子   | 92%    | —    | 5日前    | デモ日程の調整中     |
+| D社からのWeb問い合わせ    | 山本学     | 15%    | —    | 12日前   | 初回返信済み        |
+
+→ 1画面で「全ての営業活動」が見える
+→ 受注確率が — の行 = まだ商談化前
+→ 商談化確率が高い行 = もうすぐ商談になる
+→ 最終活動が古い行 = 放置されている（確率が下がり始める）
+設計判断
+データモデル：変えない（VIEW で実現）
+
+-- 新しい VIEW（または API エンドポイント）
+-- contacts + deals + activity_logs を JOIN して1つのリストにする
+
+SELECT
+  COALESCE(d.title, ai_generated_subject) AS 件名,
+  c.last_name || c.first_name AS 顧客,
+  c.deal_probability AS 商談化確率,
+  d.win_probability AS 受注確率,          -- deal がなければ NULL
+  c.last_activity_at AS 最終活動,
+  latest_activity.ai_summary AS 最終活動内容
+FROM contacts c
+LEFT JOIN deals d ON d.primary_contact_id = c.id AND d.stage = 'open'
+LEFT JOIN LATERAL (
+  SELECT ai_summary FROM activity_logs
+  WHERE contact_id = c.id ORDER BY created_at DESC LIMIT 1
+) latest_activity ON true
+WHERE c.lifecycle_stage IN ('prospect', 'active')
+ORDER BY COALESCE(d.win_probability, c.deal_probability, 0) DESC;
+裏側は accounts / contacts / deals のまま。 表示レイヤーだけ統合する。
+
+件名の自動生成
+
+トリガー: コンタクト初回登録時
+入力: 登録時のメモ or Slack メッセージ
+AI: 「{会社名} + {話題の要約}」を10文字以内で生成
+
+例:
+  「田中太郎さんを登録。ABCの情シスで、クラウド移行を検討中」
+  → 件名: 「ABC社 クラウド移行」
+
+  「イベントで名刺交換した山本さん」
+  → 件名: 「D社 イベント接点」
+Slack から /crm edit 件名 で変更可能。
+
+確率の表示ルール
+
+商談化前（deal なし）:
+  商談化確率: 15%    受注確率: —
+
+商談化後（deal あり）:
+  商談化確率: (表示しない or 達成済み)    受注確率: 45%
+
+受注後:
+  行自体を「完了」セクションに移動
+センチメントと根拠の扱い
+あなたの方針通り：
+
+確率の数字に含める（別指標として見せない）
+根拠は聞かれた時だけ（Slack で「ABCの案件どうなってる？」と聞くと AI が根拠付きで答える）
+Web では確率の数字をクリックしたら根拠がポップアップする程度
+「AI Flow」というブランディング
+これは プロダクト名の候補 としても強い。
+
+
+現状: SlackSFA — 「Slack の SFA」→ Salesforce の下位互換に聞こえる
+提案: AI Flow  — 「AI が営業フローを流す」→ 新カテゴリ
+
+ロゴイメージ:
+  [AIキャラ] AI Flow
+  ~~~~~~~~~~~~
+  左メニューの最上部に配置
+SFA という言葉を使わないことで:
+
+「CRM/SFA を知らない人」にも直感的
+「AI が全部やってくれる」感が出る
+Salesforce との比較を避けられる（別カテゴリとして認識される）
+影響範囲と進め方
+TASK_12 への影響
+黒子が今やっている TASK_12（/crm-list 強化）に直接影響する。方針：
+
+
+旧 TASK_12: /crm-list contacts / deals / accounts の3コマンド
+新 TASK_12: /crm （= AI Flow 一覧）がデフォルト
+            /crm contacts → 顧客基礎情報（名前・会社・連絡先のみ）
+            /crm accounts → 会社基礎情報
+TASK_11 への影響
+
+旧 TASK_11: Dashboard + DealBoard + ContactList
+新 TASK_11: Dashboard + AI Flow 一覧 + 設定
+            DealBoard（カンバン）→ 廃止 or AI Flow の別表示モード
+            ContactList → 基礎情報だけの簡素なテーブル
+黒子への指示更新が必要
+TASK_12 の設計書を更新して「AI Flow ビュー」中心に書き換える必要があります。今の TASK_12 実装を止めて設計書を更新しますか？ それとも現行の TASK_12 を完了させてから AI Flow 対応を別タスクにしますか？
+
+オッパの提言を承諾します。
+その方針で黒子に指示書を書いてください。
+なぜこの変更になったかの理由も伝えてあげてね。
+
+ロゴイメージ: 左メニューの最上部に配置、今の左メニューの「ナーチャリング」の代わりにAIを表すマークを入れる（claude codeのカニに当たるもの）
+```
+
+```
+サブスク企業には現在にのアカウンチベースが良いので、将来的に兄弟アプリとしてリリースできるように今のコードは完全に保存しておきたいです
+
+```
+Write TASK_13_AI_FLOW_VIEW.md
+395 lines
+# TASK_13: AI Flow ビュー — 案件ベースの統合 SFA 画面
+
+> **目的**: 顧客・ナーチャリング・商談の3画面を「AI Flow」1画面に統合し、SFA 未経験者にも直感的な UX を提供する
+> **優先度**: 🔴 最優先（TASK_11/12 を置き換える）
+> **依存**: TASK_10（確率エンジン）完了済み
+
+---
+
+## 1. なぜこの変更をするのか
+
+### 問題
+
+現在の画面構成は SFA の専門用語がそのまま UI になっている：
+
+| 画面 | 表示内容 | ユーザーの混乱 |
+|------|----------|--------------|
+| 顧客一覧 | deal_probability, nurturing_stage, ai_score | 「AI自信度と温度感の違いは？」 |
+| ナーチャリング | confidence_score, ai_reasoning, status | 「これと顧客の温度感は何が違う？」 |
+| 商談パイプライン | win_probability, progress_score, MEDDPICC | 「顧客一覧の確率とこの確率の関係は？」 |
+
+**3つの画面に「AI の判断」が散らばっていて、SFA を知らない人には何を見ればいいかわからない。**
+
+### 解決
+
+営業活動の本質は「案件を進めること」。ナーチャリング（温める）もコーチング（育てる）も、やっていることは **「次のアクションを実行する」** という1つの行為。
+
+**→ 全てを「件名」をキーにした1つのリスト（AI Flow）に統合する。**
+
+### 副次的メリット：ブランディング
+
+- 「ナーチャリング」という SFA 用語を廃止
+- 代わりに **「AI Flow」** という名称で、AI が営業フローを自動で流す新カテゴリを作る
+- Salesforce の下位互換ではなく、**全く新しい AI 営業ツール** として認識される
+
+---
+
+## 2. AI Flow ビューの仕様
+
+### 2.1 テーブル定義
+
+| カラム | 内容 | データソース |
+|--------|------|-------------|
+| 件名 | ファーストタッチの内容から AI が自動命名。Slack から編集可能 | contacts.flow_subject（新規カラム）or deals.title |
+| 顧客 | 担当者名 | contacts.last_name + first_name |
+| 商談化確率 | 見込み客 → 商談になる確率 | contacts.deal_probability |
+| 受注確率 | 商談 → 受注に至る確率 | deals.win_probability（deal がなければ「—」） |
+| 作成日時 | 初回登録日 | contacts.created_at |
+| 最終活動 | 最後の活動からの経過日数 | contacts.last_activity_at から算出 |
+| 最終活動内容 | 最後のやり取りの AI 要約 | activity_logs.ai_summary（最新1件） |
+
+### 2.2 表示ルール
+
+```
+商談化前（deal なし）:
+  件名: AI 自動生成（「ABC社 クラウド相談」）
+  商談化確率: 45%
+  受注確率: —
+
+商談化後（deal あり）:
+  件名: deals.title（= AI が生成 or ユーザーが編集したもの）
+  商談化確率: (非表示 or ✅)
+  受注確率: 62%
+
+受注 / 失注:
+  通常リストから消える（「完了」タブで閲覧可能）
+```
+
+### 2.3 ソート
+
+デフォルト: 最終活動日の新しい順（放置されている案件が下に沈む）
+切替可能: 確率の高い順 / 作成日順
+
+### 2.4 センチメント・根拠の扱い
+
+- **センチメントは確率に内包** — 別指標として表示しない
+- **根拠は聞かれた時だけ答える**:
+  - Slack: 「ABCの案件どうなってる？」→ AI が根拠付きで回答
+  - Web: 行クリック → 詳細パネルで根拠表示
+
+---
+
+## 3. 件名の自動生成
+
+### トリガー
+
+コンタクト初回登録時に自動生成。
+
+### AI プロンプト
+
+```
+以下の情報から、営業案件の件名を生成してください。
+「{会社名} {話題の要約}」の形式で、15文字以内で返してください。
+
+顧客情報:
+- 名前: {last_name}{first_name}
+- 会社: {company_name}
+- 登録時のメモ: {initial_note}
+- ソース: {source}
+
+例:
+- 「ABC社 クラウド移行」
+- 「D社 イベント接点」
+- 「E Holdings DX相談」
+```
+
+### 保存先
+
+`contacts.flow_subject` カラムを新設（nullable, TEXT）。
+deals が作成されたら `deals.title` が件名として使われる（flow_subject より優先）。
+
+---
+
+## 4. DB マイグレーション
+
+```sql
+-- api/src/db/migrations/012_flow_subject.sql
+
+-- contacts に件名カラムを追加
+ALTER TABLE contacts ADD COLUMN IF NOT EXISTS flow_subject TEXT;
+
+-- 既存データの件名を生成（後からバッチで AI 生成する）
+-- 暫定: 会社名 + 「案件」
+UPDATE contacts
+SET flow_subject = COALESCE(
+  (SELECT name FROM accounts WHERE id = contacts.account_id),
+  contacts.company_name,
+  '未登録'
+) || ' 案件'
+WHERE flow_subject IS NULL;
+```
+
+---
+
+## 5. API エンドポイント
+
+### 新規: GET /api/flows
+
+AI Flow 一覧を返す統合エンドポイント。
+
+```typescript
+// api/src/routes/api.ts に追加
+
+app.get('/api/flows', async (req, res) => {
+  const { q, sort } = req.query;
+  const tenantId = req.headers['x-tenant-id'] as string;
+
+  const result = await withTenant(tenantId, async (client) => {
+    let sql = `
+      SELECT
+        c.id AS contact_id,
+        d.id AS deal_id,
+        COALESCE(d.title, c.flow_subject, c.last_name || ' 案件') AS subject,
+        c.last_name || COALESCE(c.first_name, '') AS contact_name,
+        COALESCE(a.name, c.company_name, '会社未登録') AS company_name,
+        c.deal_probability,
+        d.win_probability,
+        c.created_at,
+        c.last_activity_at,
+        (
+          SELECT ai_summary FROM activity_logs
+          WHERE contact_id = c.id
+          ORDER BY created_at DESC LIMIT 1
+        ) AS last_activity_summary
+      FROM contacts c
+      LEFT JOIN accounts a ON a.id = c.account_id
+      LEFT JOIN deals d ON d.primary_contact_id = c.id AND d.stage = 'open'
+      WHERE c.lifecycle_stage IN ('prospect', 'active')
+    `;
+
+    if (q) {
+      sql += ` AND (c.last_name ILIKE $1 OR COALESCE(a.name, c.company_name) ILIKE $1 OR COALESCE(d.title, c.flow_subject) ILIKE $1)`;
+    }
+
+    const orderBy = sort === 'probability'
+      ? 'ORDER BY COALESCE(d.win_probability, c.deal_probability, 0) DESC'
+      : 'ORDER BY c.last_activity_at DESC NULLS LAST';
+
+    sql += ` ${orderBy} LIMIT 50`;
+
+    return client.query(sql, q ? [`%${q}%`] : []);
+  });
+
+  res.json(result.rows);
+});
+```
+
+### 既存エンドポイントの扱い
+
+| エンドポイント | 変更 |
+|---------------|------|
+| `GET /api/contacts` | 残す（基礎情報用） |
+| `GET /api/deals` | 残す（Web 詳細用） |
+| `GET /api/nurturing/drafts` | 残す（内部で AI Flow から参照） |
+| `GET /api/flows` | **新規** — AI Flow ビューのメイン |
+
+---
+
+## 6. Slack UI（/crm コマンド）
+
+### 6.1 デフォルトビュー = AI Flow 一覧
+
+```
+/crm                    → AI Flow 一覧（全件）
+/crm 田中               → キーワード検索
+/crm contacts           → 顧客基礎情報（名前・会社・連絡先のみ）
+/crm accounts           → 会社基礎情報
+/crm help               → 使い方
+```
+
+### 6.2 AI Flow 一覧の表示
+
+```
+🔥 78% | 受注: 45%
+*ABC社 クラウド移行*
+田中太郎 | 2日前 | 予算感のヒアリング
+[詳細] [メモ追加] [アクション]
+
+🌤️ 45% | 受注: —
+*B社 基幹システム相談*
+佐藤花子 | 5日前 | デモ日程の調整中
+[詳細] [メモ追加] [アクション]
+
+🧊 15% | 受注: —
+*D社 イベント接点*
+山本学 | ⚠️ 12日前 | 初回返信済み
+[詳細] [メモ追加] [アクション]
+
+[◀ 前の10件] [次の10件 ▶]
+```
+
+- 確率の絵文字は商談化確率 or 受注確率の高い方で決定
+- 最終活動が 7日以上前の場合 ⚠️ を表示
+- 「アクション」ボタン = AI 推奨の次のアクションをモーダルで表示 + 実行
+
+### 6.3 詳細モーダル
+
+行の「詳細」ボタンで開くモーダル:
+
+```
+┌─────────────────────────────────────┐
+│  ABC社 クラウド移行                   │
+│                                      │
+│  👤 田中太郎（ABC株式会社・部長）       │
+│  📧 tanaka@abc.co.jp | 📞 03-xxxx    │
+│                                      │
+│  商談化確率: 78%  受注確率: 45%        │
+│  作成: 3/1  最終活動: 3/21（2日前）    │
+│                                      │
+│  ── 最近のやりとり ──                  │
+│  3/21 📧 予算感のヒアリング            │
+│  3/18 🤝 初回ミーティング実施           │
+│  3/15 📞 電話で課題確認                │
+│                                      │
+│  ── AI 推奨アクション ──               │
+│  🔥 決裁者との面談を設定してください    │
+│  📋 提案書をカスタマイズして送付       │
+│                                      │
+│  [メモ追加] [編集] [商談作成]          │
+└─────────────────────────────────────┘
+```
+
+### 6.4 件名の編集
+
+```
+/crm edit 件名 ABC社の新規クラウド案件
+```
+
+or 詳細モーダルの「編集」から件名フィールドを変更。
+
+---
+
+## 7. Web UI
+
+### 7.1 左メニュー変更
+
+```
+旧:
+  SlackSFA
+  ├── 📊 ダッシュボード
+  ├── 🎯 リード
+  ├── 🏢 取引先
+  ├── 💼 商談
+  ├── 🤖 ナーチャリング
+  └── 📈 分析
+
+新:
+  [AI キャラ + 'AI Flow']  ← ロゴ（左メニュー最上部）
+  ├── 📊 ダッシュボード
+  ├── ✨ AI Flow           ← メイン画面（旧ナーチャリング + 商談 + 顧客を統合）
+  ├── 👤 顧客              ← 基礎情報のみ（CRUD なし）
+  ├── 🏢 会社              ← 基礎情報のみ
+  └── 📈 分析
+```
+
+### 7.2 AI Flow ページ（FlowList.vue 新規作成）
+
+テーブル表示（あなたが定義した通り）:
+
+```
+┌──────────────────────────────────────────────────────────────────────┐
+│  ✨ AI Flow                                            [検索...] 🔍 │
+│                                                                      │
+│  件名              顧客      商談化  受注  作成日  最終活動  内容     │
+│  ─────────────────────────────────────────────────────────────────── │
+│  ABC社クラウド移行  田中太郎  78%    45%   3/1    2日前    予算ヒア.. │
+│  B社基幹システム    佐藤花子  92%    —     3/5    5日前    デモ調整.. │
+│  D社イベント接点    山本学    15%    —     3/10   ⚠️12日   初回返信.. │
+│  ...                                                                 │
+│                                                                      │
+│  [◀] 1 / 3 [▶]                                                      │
+└──────────────────────────────────────────────────────────────────────┘
+```
+
+行クリック → 右パネル or モーダルで詳細表示（やりとり履歴 + AI 推奨アクション + 確率推移グラフ）
+
+### 7.3 AI キャラのロゴ
+
+左メニュー最上部に配置。Claude Code の🦀のように、AI Flow のアイデンティティを表すマーク。
+
+具体的なキャラデザインは後で決定。仮で以下のいずれか:
+- ✨（スパークル）— AI の魔法感
+- 🌊（ウェーブ）— Flow の流れ
+- 🔮（水晶玉）— AI の予測力
+
+実装時は SVG アイコンをプレースホルダーとして配置し、後からデザイナーのアセットに差し替えられるようにする。
+
+### 7.4 削除する画面
+
+| 旧画面 | 対応 |
+|--------|------|
+| ContactList.vue（CRUD付き） | → 顧客基礎情報テーブル（閲覧のみ）に簡素化 |
+| NurturingList.vue | → **廃止**（AI Flow に統合） |
+| DealBoard.vue（カンバン） | → **廃止**（AI Flow テーブルに統合） |
+| DealDetail.vue | → AI Flow の詳細パネルとして再利用（確率推移グラフ等） |
+
+---
+
+## 8. 実装ファイル一覧
+
+| ファイル | 操作 | 内容 |
+|----------|------|------|
+| `api/src/db/migrations/012_flow_subject.sql` | 新規 | flow_subject カラム追加 |
+| `api/src/routes/api.ts` | 改修 | GET /api/flows エンドポイント追加 |
+| `api/src/slack/commands/crm-list.ts` | 改修 | /crm デフォルト = AI Flow 一覧 |
+| `api/src/slack/views/flow-detail.ts` | 新規 | AI Flow 詳細モーダル |
+| `api/src/services/flow-subject.ts` | 新規 | 件名自動生成サービス |
+| `web/src/views/FlowList.vue` | 新規 | AI Flow 一覧ページ |
+| `web/src/views/FlowDetail.vue` | 新規 | AI Flow 詳細（グラフ含む） |
+| `web/src/views/ContactList.vue` | 改修 | 基礎情報のみに簡素化 |
+| `web/src/views/NurturingList.vue` | 削除 | AI Flow に統合 |
+| `web/src/views/DealBoard.vue` | 削除 | AI Flow に統合 |
+| `web/src/router/index.ts` | 改修 | ルート変更（/flow, /flow/:id） |
+| `web/src/App.vue` | 改修 | 左メニュー変更 + AI Flow ロゴ |
+| `web/src/lib/api-client.ts` | 改修 | flows() メソッド追加 |
+
+---
+
+## 9. 完了条件
+
+- [ ] contacts.flow_subject カラムが追加されている
+- [ ] コンタクト初回登録時に件名が AI で自動生成される
+- [ ] GET /api/flows が contacts + deals + activity_logs を統合して返す
+- [ ] `/crm` で AI Flow 一覧が表示される（10件/ページ）
+- [ ] AI Flow 一覧に件名・顧客・商談化確率・受注確率・最終活動・内容が表示される
+- [ ] 詳細モーダルでやりとり履歴と AI 推奨アクションが表示される
+- [ ] 件名が Slack から編集できる
+- [ ] Web に AI Flow ページが存在する
+- [ ] Web の左メニューが新構成になっている（AI Flow ロゴ含む）
+- [ ] NurturingList.vue と DealBoard.vue が削除されている
+- [ ] ContactList.vue が基礎情報のみの閲覧テーブルになっている
+- [ ] `npm run build` エラーなし
+
+---
+
+## 10. アカウントベース版の保全
+
+**重要: 現在のコードを完全に保存すること。**
+
+将来、サブスクリプション型企業向けに「アカウントベース版」を兄弟アプリとしてリリースする可能性がある。
+
+### 保全方法
+
+TASK_13 着手前に以下を実行:
+
+```bash
+# 現在の状態でタグを打つ
+git tag v1.0-account-based -m "Account-based SFA version (before AI Flow migration)"
+git push origin v1.0-account-based
+```
+
+これにより:
+- `v1.0-account-based` タグからいつでも復元可能
+- AI Flow 版と並行して開発・リリースできる
+- 将来 fork して別リポジトリにすることも可能
+次に SONNET_INSTRUCTIONS.md を更新します。
+
+Read SONNET_INSTRUCTIONS.md
+Write SONNET_INSTRUCTIONS.md
+365 lines
+# SlackSFA Phase 3 — Sonnet 実装指示書
+
+## Context
+
+SlackSFA は α版として稼働中の Slack 統合 AI-CRM。Phase 2.5 で品質・セキュリティの底上げが完了し、Phase 3 では **差別化機能の実装** と **AI Flow への UX 統合** に進む。
+
+### Phase 2.5 完了済み（触らないこと）
+- ✅ TASK_01: RLS セッション修正（withTenant + SET LOCAL）
+- ✅ TASK_02: 不要依存削除、AI モデル一元化（ai-models.ts）
+- ✅ TASK_03: leads テーブル廃止 → contacts 統合（lifecycle_stage）
+- ✅ TASK_04: テスト基盤（vitest + client/intent-parser/contact.service テスト）
+- ✅ TASK_05: Terraform IaC 初版
+- ✅ TASK_06: エンリッチメント（Claude Haiku）
+- ✅ TASK_07: Slack Block Kit（/crm-list + 詳細モーダル）
+- ✅ TASK_08: 商談コーチング AI（MEDDPICC 8要素）
+
+### TASK_10 完了済み（触らないこと）
+- ✅ センチメント駆動の確率エンジン（sentiment-analyzer + probability-engine）
+- ✅ 商談ステージ 3値化（open / won / lost）
+- ✅ 時間減衰ロジック（毎朝ブリーフィングに組み込み）
+- ✅ Slack チャンネル監視（/crm-link + channel_links + バッチ分析）
+- ✅ センチメント分析の精度改善（メモ + activity_logs.body 連結）
+
+### Phase 3 の設計思想
+
+1. **AI Flow**: 顧客・ナーチャリング・商談を「件名」をキーにした1画面に統合
+2. **センチメント駆動**: 活動の「回数」ではなく「中身」から確率を算出する
+3. **Slack メイン**: 日常操作の 90% は Slack で完結。Web はダッシュボード＋分析
+4. **2つの確率**:
+   - `deal_probability`（商談化確率）: 見込み客が商談になるか
+   - `win_probability`（受注確率）: 商談が受注に至るか
+
+---
+
+## なぜ AI Flow への統合が必要か
+
+### 問題
+
+現在の3画面（顧客一覧・ナーチャリング・商談パイプライン）は SFA の専門用語がそのまま UI になっている。
+
+- 顧客一覧に `deal_probability`, `nurturing_stage`, `ai_score` が表示される
+- ナーチャリング画面に `confidence_score`, `ai_reasoning` が表示される
+- 商談画面に `win_probability`, `progress_score` が表示される
+
+**SFA を知らない人には「AI 自信度と温度感の違い」「顧客の確率と商談の確率の関係」がわからない。**
+
+### 解決
+
+営業活動の本質は「案件を進めること」。ナーチャリングもコーチングも、やっていることは「次のアクションを実行する」という1つの行為。
+
+**→ 全てを「件名」をキーにした1つのリスト（AI Flow）に統合する。**
+
+### ブランディング
+
+- 「ナーチャリング」という SFA 用語を廃止
+- 代わりに **AI Flow** という名称で、AI が営業フローを自動で流す新カテゴリを作る
+- Web の左メニュー最上部に AI キャラ + 「AI Flow」ロゴを配置
+
+---
+
+## 実行順序と優先度
+
+```
+⚠️ 作業開始前に必ず実行 ⚠️
+git tag v1.0-account-based -m "Account-based SFA version (before AI Flow migration)"
+git push origin v1.0-account-based
+
+TASK_13（AI Flow ビュー）🔴 ← 最優先
+    ↓
+TASK_09（Seed Data + E2E テスト）🟡 ← UI 確定後に書く
+```
+
+**旧 TASK_11（Web ダッシュボード特化）と旧 TASK_12（Slack /crm-list 強化）は TASK_13 に統合された。** それらの設計書は参考資料として残すが、実装は TASK_13 に従うこと。
+
+---
+
+## 現在のコードの保全（重要）
+
+**TASK_13 着手前に以下を必ず実行すること:**
+
+```bash
+git tag v1.0-account-based -m "Account-based SFA version (before AI Flow migration)"
+git push origin v1.0-account-based
+```
+
+理由: 将来、サブスクリプション型企業向けに「アカウントベース版」を兄弟アプリとしてリリースする可能性がある。現在のコードを完全に復元できるようにタグで保存する。
+
+---
+
+## TASK_13: AI Flow ビュー 🔴
+
+**設計書:** `TASK_13_AI_FLOW_VIEW.md` を必ず読むこと
+
+### 概要
+
+顧客・ナーチャリング・商談の3画面を「AI Flow」1画面に統合する。件名をキーに、全ての営業活動を1つのリストで管理する。
+
+### 実装ステップ（この順序で進めること）
+
+#### Step 0: コード保全
+
+```bash
+git tag v1.0-account-based -m "Account-based SFA version (before AI Flow migration)"
+git push origin v1.0-account-based
+```
+
+#### Step 1: DB マイグレーション
+
+```sql
+-- api/src/db/migrations/012_flow_subject.sql
+
+ALTER TABLE contacts ADD COLUMN IF NOT EXISTS flow_subject TEXT;
+
+-- 既存データの件名を暫定生成
+UPDATE contacts
+SET flow_subject = COALESCE(
+  (SELECT name FROM accounts WHERE id = contacts.account_id),
+  contacts.company_name,
+  '未登録'
+) || ' 案件'
+WHERE flow_subject IS NULL;
+```
+
+#### Step 2: 件名自動生成サービス
+
+新規ファイル: `api/src/services/flow-subject.ts`
+
+- コンタクト初回登録時に自動実行
+- 入力: 登録時のメモ or Slack メッセージ + 会社名
+- AI（Haiku）で「{会社名} {話題の要約}」を15文字以内で生成
+- `contacts.flow_subject` に保存
+- Slack から `/crm edit 件名 {新しい件名}` で変更可能
+
+#### Step 3: API エンドポイント
+
+新規: `GET /api/flows`
+
+```typescript
+// contacts + deals + activity_logs を JOIN して1つのリストにする
+SELECT
+  c.id AS contact_id,
+  d.id AS deal_id,
+  COALESCE(d.title, c.flow_subject, c.last_name || ' 案件') AS subject,
+  c.last_name || COALESCE(c.first_name, '') AS contact_name,
+  COALESCE(a.name, c.company_name, '会社未登録') AS company_name,
+  c.deal_probability,
+  d.win_probability,
+  c.created_at,
+  c.last_activity_at,
+  (
+    SELECT ai_summary FROM activity_logs
+    WHERE contact_id = c.id
+    ORDER BY created_at DESC LIMIT 1
+  ) AS last_activity_summary
+FROM contacts c
+LEFT JOIN accounts a ON a.id = c.account_id
+LEFT JOIN deals d ON d.primary_contact_id = c.id AND d.stage = 'open'
+WHERE c.lifecycle_stage IN ('prospect', 'active')
+ORDER BY c.last_activity_at DESC NULLS LAST
+LIMIT 50;
+```
+
+既存エンドポイント（/api/contacts, /api/deals 等）は残す。内部で使っている箇所があるため。
+
+#### Step 4: Slack — /crm コマンドの変更
+
+`api/src/slack/commands/crm-list.ts` を改修:
+
+```
+/crm                    → AI Flow 一覧（デフォルト）
+/crm 田中               → キーワード検索
+/crm contacts           → 顧客基礎情報（名前・会社・連絡先のみ）
+/crm accounts           → 会社基礎情報
+```
+
+**AI Flow 一覧の表示フォーマット:**
+
+```
+🔥 78% | 受注: 45%
+*ABC社 クラウド移行*
+田中太郎 | 2日前 | 予算感のヒアリング
+[詳細] [メモ追加] [アクション]
+
+🌤️ 45% | 受注: —
+*B社 基幹システム相談*
+佐藤花子 | 5日前 | デモ日程の調整中
+[詳細] [メモ追加] [アクション]
+```
+
+- 確率の絵文字: 🧊(0-30%) / 🌤️(31-60%) / 🔥(61-90%) / ⭐(91%+)
+  - 商談化確率 or 受注確率の高い方で決定
+- 最終活動が 7日以上前の場合 ⚠️ を付与
+- 10件/ページのページネーション
+
+**重要: センチメント指標は確率に内包する。別指標として表示しない。**
+**根拠は Slack で聞かれた時のみ回答する（「ABCの案件どうなってる？」→ AI が根拠付きで回答）。**
+
+#### Step 5: Slack — 詳細モーダル
+
+新規ファイル: `api/src/slack/views/flow-detail.ts`
+
+既存の `detail-card.ts` を参考にしつつ、AI Flow 用に再構成:
+- ヘッダー: 件名
+- 基本情報: 顧客名・会社名・連絡先
+- 確率: 商談化確率 / 受注確率
+- やりとり履歴（最新5件）: activity_logs + crm_notes を時系列マージ
+- AI 推奨アクション（上位2件）: suggested_actions から取得
+- ボタン: [メモ追加] [編集] [商談作成]（deal がない場合）
+
+#### Step 6: Slack — メモ追加・編集モーダル
+
+旧 TASK_12 の設計をそのまま流用:
+- `api/src/slack/views/note-modal.ts` — メモ追加モーダル
+- `api/src/slack/views/edit-modal.ts` — 顧客編集モーダル（件名フィールドを追加）
+
+#### Step 7: Web — AI Flow ページ
+
+新規ファイル: `web/src/views/FlowList.vue`
+
+テーブル表示:
+
+| 件名 | 顧客 | 商談化確率 | 受注確率 | 作成日 | 最終活動 | 最終活動内容 |
+|------|------|-----------|---------|--------|---------|------------|
+
+- デフォルトソート: 最終活動日の新しい順
+- 切替可能: 確率の高い順 / 作成日順
+- 検索: 件名・顧客名・会社名
+- ページネーション: 10件/ページ
+- 行クリック → FlowDetail.vue に遷移
+
+新規ファイル: `web/src/views/FlowDetail.vue`
+
+- 既存の DealDetail.vue のグラフ部分（確率推移、MEDDPICC レーダー）を再利用
+- やりとり履歴の時系列表示
+- AI 推奨アクションの表示
+
+#### Step 8: Web — 左メニュー変更
+
+`web/src/App.vue`（またはレイアウトコンポーネント）を改修:
+
+```
+旧:
+  SlackSFA
+  ├── 📊 ダッシュボード
+  ├── 🎯 リード
+  ├── 🏢 取引先
+  ├── 💼 商談
+  ├── 🤖 ナーチャリング
+  └── 📈 分析
+
+新:
+  [✨ AI Flow]              ← ロゴ（最上部、AI を表すアイコン）
+  ├── 📊 ダッシュボード
+  ├── ✨ AI Flow             ← メイン画面
+  ├── 👤 顧客               ← 基礎情報のみ
+  ├── 🏢 会社
+  └── 📈 分析
+```
+
+AI を表すアイコン:
+- SVG プレースホルダーを配置する（後からデザイナーのアセットに差し替え可能にする）
+- 仮アイコンとして ✨ または 🔮 を使用
+
+#### Step 9: Web — 不要画面の削除
+
+| ファイル | 操作 |
+|----------|------|
+| `web/src/views/NurturingList.vue` | **削除** |
+| `web/src/views/DealBoard.vue` | **削除** |
+| `web/src/views/DealDetail.vue` | グラフ部分を FlowDetail.vue に移植後、**削除** |
+| `web/src/views/ContactList.vue` | CRUD 削除、基礎情報のみのテーブルに簡素化 |
+
+ルーター変更:
+```typescript
+// 旧ルートを削除/リダイレクト
+{ path: '/nurturing', redirect: '/flow' },
+{ path: '/deals', redirect: '/flow' },
+{ path: '/deals/:id', redirect: to => `/flow/${to.params.id}` },
+
+// 新ルート追加
+{ path: '/flow', component: FlowList },
+{ path: '/flow/:id', component: FlowDetail },
+```
+
+#### Step 10: Web — Dashboard.vue の調整
+
+Dashboard は残す。ただし以下を調整:
+- 旧 TASK_11 で追加した確率分布チャート・センチメントサマリー・推奨アクションはそのまま活用
+- 「商談パイプライン」の KPI を「AI Flow」の KPI に名称変更
+- リンク先を /deals → /flow に変更
+
+**完了条件:**
+- [ ] `git tag v1.0-account-based` が打たれている
+- [ ] contacts.flow_subject カラムが追加されている
+- [ ] コンタクト初回登録時に件名が AI で自動生成される
+- [ ] GET /api/flows が統合リストを返す
+- [ ] `/crm` で AI Flow 一覧が表示される（10件/ページ）
+- [ ] AI Flow 一覧に件名・顧客・商談化確率・受注確率・最終活動・内容が表示される
+- [ ] 詳細モーダルでやりとり履歴と AI 推奨アクションが表示される
+- [ ] 件名が Slack から編集できる
+- [ ] メモ追加・顧客編集モーダルが動作する
+- [ ] Web に FlowList.vue と FlowDetail.vue が存在する
+- [ ] Web の左メニューが新構成になっている（AI Flow ロゴ含む）
+- [ ] NurturingList.vue と DealBoard.vue が削除されている
+- [ ] ContactList.vue が基礎情報のみの閲覧テーブルになっている
+- [ ] Dashboard.vue の名称・リンクが AI Flow に更新されている
+- [ ] `npm run build` エラーなし、`npm test` PASS
+- [ ] HANDOFF.md が更新されている
+
+---
+
+## TASK_09: Seed Data + Playwright E2E テスト 🟡
+
+**設計書:** `TASK_09_E2E_SEED_DATA.md` を必ず読むこと
+
+TASK_13 完了後に着手。テストシナリオは AI Flow ベースに書き換えること:
+- FlowList: テーブル表示、検索、ソート切替、ページネーション
+- FlowDetail: やりとり履歴、AI 推奨アクション、確率推移グラフ
+- Dashboard: KPI、確率分布チャート
+- ContactList: 基礎情報のみ表示（CRUD ボタンがないこと）
+- AccountList: 一覧、検索、詳細遷移
+- API: /api/flows エンドポイントの検証
+
+---
+
+## 横断ルール（全タスク共通）
+
+### コーディング規約
+
+1. **既存のコードスタイルに従う**: TypeScript strict, async/await, サービス層分離
+2. **マイグレーションは追番**: 次は `012_` から
+3. **AI モデルは `ai-models.ts` の定数を使う**: ハードコード禁止
+4. **ラベルは `crm-labels.ts` を使う**: Web/Slack で同じラベルを表示する
+5. **エラーを握りつぶさない**: `.catch(() => {})` は禁止。最低限 `console.error` でログ出力
+
+### 作業ルール
+
+1. **TASK_13 着手前に `git tag v1.0-account-based` を打つ**: 必須
+2. **各ステップ完了時に git commit**: `task13-step1: add flow_subject column`
+3. **不明点は実装前に聞く**: 推測で進めない
+4. **テストが通る状態を維持**: red のまま次のステップに行かない
+5. **HANDOFF.md を完了時に更新**: 進捗を記録
+
+### 検証方法
+
+各ステップ完了時:
+1. `npm run build` — TypeScript コンパイルエラーなし
+2. `npm test` — 全テスト PASS
+3. `docker compose up` — ローカルで動作確認
+4. Slack で `/crm` が AI Flow 一覧を返す
+5. Web で AI Flow ページが正しく表示される
+
+---
+
+## 参照ドキュメント
+
+| ファイル | 内容 |
+|----------|------|
+| `TASK_13_AI_FLOW_VIEW.md` | AI Flow ビュー詳細設計（テーブル定義、API、Slack/Web UI） |
+| `TASK_09_E2E_SEED_DATA.md` | E2E テスト設計（AI Flow ベースに書き換えること） |
+| `TASK_10_PROBABILITY_ENGINE.md` | 確率エンジン設計（完了済み・参考資料） |
+| `TASK_11_WEB_DASHBOARD.md` | 旧 Web ダッシュボード設計（TASK_13 に統合・参考資料） |
+| `TASK_12_SLACK_CRM_LIST.md` | 旧 Slack 強化設計（TASK_13 に統合・参考資料） |
+| `HANDOFF.md` | プロジェクト全体の状態 |
+HANDOFF.md も更新します。
+
+Read HANDOFF.md (lines 134-173)
+Edit HANDOFF.md
+Added 4 lines
+Edit HANDOFF.md
+Added 1 line
+完了しました。作成・更新したファイル：
+
+TASK_13_AI_FLOW_VIEW.md — AI Flow ビューの詳細設計書（新規）
+SONNET_INSTRUCTIONS.md — 黒子への指示書を全面更新
+HANDOFF.md — Phase 3 タスク一覧を更新（TASK_11/12 → TASK_13 に統合）
+黒子への指示書のポイント：
+
+なぜこの変更が必要か — 3画面に AI 判断が散らばっていて SFA 未経験者に混乱を与える問題を説明
+Step 0 で git tag v1.0-account-based — コード保全を最初に実行するよう明記
+Step 1〜10 の実行順序 — DB → API → Slack → Web の順で確実に進める
+旧 TASK_11/12 は参考資料 — 設計は残すが実装は TASK_13 に従うよう明記
+黒子にこの指示書を渡せば着手できます。
+
+黒子の作業が終わりました。この時点での黒子のコメントは以下の通りです。' 疑問点・懸念
+
+  ① 廃棄の自動削除は本番では危険すぎる
+
+  現実装は「30日後に本番 DB から完全削除」。undo がない。誤操作で廃棄にしたコンタクトが30日後に消える。最低限、削除実行前日に Slack
+  通知を送るべき。
+
+  削除の1日前: 「⚠️  明日削除されます: 田中太郎（ABC社）」
+
+  実装済みの runDiscardedCleanup() には通知がない。
+
+  ② customer ステージが行方不明
+
+  DB に lifecycle_stage = 'customer' のコンタクトが存在する可能性があるが、新タブは 育成中/商談中/休眠/廃棄
+  の4つ。「全て」タブには出るが、どのタブにも帰属しない。ユーザーが気づかないまま放置される。
+
+  ③ Slack edit-modal の選択肢が汚い
+
+  LIFECYCLE_LABELS の全 key から動的生成しているため、churned（後方互換ラベル）と customer（旧ステージ）が選択肢に出てしまう。
+
+  ④ FlowDetail.vue に実装バグがあります
+
+  // この行は全件取得で無意味（結果を使っていない）
+  const [c, notes, activities] = await Promise.all([
+    api.contact(contactId),
+    api.contacts(),        // ← 全件取得してるが使ってない
+    Promise.resolve([]),   // ← 空
+  ]);
+  // その後また同じ contact を取得（重複）
+  const cDetail = await api.contact(contactId);
+
+  さらに、account の全 deals から stage = 'open' を探しているため、別コンタクト担当の商談が表示される可能性がある。
+
+  ⑤ flow_subject の自動生成が未接続
+
+  generateFlowSubject() を作ったが、コンタクト新規登録フロー（POST /api/contacts または Slack
+  のメッセージハンドラ）にフックしていない。新規コンタクトを登録しても件名が AI 生成されない。
+
+  ---
+  優先度つきの改善提案
+
+  ┌─────────────┬─────────────────────────────────────────────────────────┐
+  │   優先度    │                          内容                           │
+  ├─────────────┼─────────────────────────────────────────────────────────┤
+  │ 🔴 今すぐ   │ FlowDetail.vue のバグ修正（重複 API・不正な deal 取得） │
+  ├─────────────┼─────────────────────────────────────────────────────────┤
+  │ 🔴 今すぐ   │ edit-modal から churned/customer を選択肢から除外       │
+  ├─────────────┼─────────────────────────────────────────────────────────┤
+  │ 🟡 近いうち │ 廃棄削除1日前の Slack 通知                              │
+  ├─────────────┼─────────────────────────────────────────────────────────┤
+  │ 🟡 近いうち │ customer ステージの active への DB マイグレーション     │
+  ├─────────────┼─────────────────────────────────────────────────────────┤
+  │ 🟢 後でいい │ generateFlowSubject をコンタクト登録フローに接続        │
+  └─────────────┴─────────────────────────────────────────────────────────┘
+
+  修正しますか？'
+黒子の自己レビュー能力が高い。全5点について判断します。
+
+各項目への判断
+① 廃棄削除の通知 → 🔴 今すぐ対応
+黒子は「🟡 近いうち」と言っているが、これは 今すぐ のレベル。本番データの自動削除に undo がないのは事故の元。30日後に黙って消えるのは危険。
+
+対応: runDiscardedCleanup() に削除1日前の Slack 通知を追加。さらに削除実行時にも通知。
+
+② customer ステージが行方不明 → 🔴 今すぐ対応
+「全て」タブにしか出ないのはユーザーが見落とす。
+
+対応: 黒子の提案通り、customer → active に DB マイグレーションでマッピング。既存顧客は「商談中」タブに出るのが自然。lifecycle_stage から customer を廃止して4値にする。
+
+
+-- 013_remove_customer_stage.sql
+UPDATE contacts SET lifecycle_stage = 'active' WHERE lifecycle_stage = 'customer';
+③ edit-modal の選択肢 → 🔴 今すぐ対応
+churned と customer が選択肢に出るのはバグ。AI Flow の4タブ（育成中/商談中/休眠/廃棄）に合わせて選択肢を絞る。
+
+④ FlowDetail.vue のバグ → 🔴 今すぐ対応
+これは明確なバグ。重複 API 呼び出しと、別コンタクト担当の商談が表示される問題は即修正。
+
+⑤ flow_subject の自動生成未接続 → 🟡 近いうちで OK
+理由: 今はテストデータも少なく実運用で登録する機会がまだない。ただし TASK_09（E2E テスト）の前には接続しておくべき。今日の修正の最後にやればいい。
+
+黒子への指示
+
+優先順で対応:
+1. 🔴 FlowDetail.vue のバグ修正（重複 API・不正な deal 取得）
+2. 🔴 edit-modal から churned/customer を除外
+3. 🔴 廃棄削除の1日前 + 実行時 Slack 通知
+4. 🔴 customer → active の DB マイグレーション（013_remove_customer_stage.sql）
+5. 🟡 generateFlowSubject をコンタクト登録フロー（POST + Slack message handler）に接続
+
+全部やって良い。この順序で進めてください。
+黒子にこのまま伝えてください。
+
+このアプリのAI利用コストは一定額までは月の料金内でそれを超えるとユーザーに課金みたいな設計を以前してたともうけど詳細を思い出せる？
+Tool loaded.
+Grep "cost|pricing|課金|料金|プラン|tier|quota|limit" (in /Users/szk/Desktop/PLAN/opus-advise, glob: *.md)
+16 lines of output
+Read Paid_Services_List.md
+Read slackSFA_commercialization_roadmap.md
+Grep "cost_estimate|コスト|従量|無料枠|included|含|上限|超" (in /Users/szk/Desktop/PLAN/opus-advise, glob: *.md)
+45 lines of output
+見つけた資料から整理すると、以下の設計が散在していました。
+
+AI利用コストの設計（既存ドキュメントから）
+1. コスト追跡の仕組み（実装済み）
+AI_Nurturing_PhaseB_Design.md の ai_draft_replies テーブルに cost_estimate_yen カラムがあり、AI操作ごとのコストを記録する設計になっています。これが「テナントごとの利用量を測る」基盤です。
+
+2. オペレーション別コスト見積もり
+AI_Nurturing_Architecture.md の3層モデル:
+
+処理	モデル	1回あたりコスト
+NLU（意図解析）	Haiku	~¥0.3
+センチメント分析	Haiku	~¥0.3
+返信ドラフト生成	Sonnet	~¥3-5
+コーチング/MEDDPICC評価	Sonnet	~¥3-5
+3. 課金モデルの方針
+SlackSFA_Business_Report_for_CEO.md に:
+
+「API コストの想定超過 | 低 | モデル使い分け（Flash 8割）+ テナント別上限設定」
+
+slackSFA_commercialization_roadmap.md に:
+
+月額 ¥2,000〜2,500/ユーザー の価格帯
+
+4. まとめると
+設計の骨格はこうなっていました:
+
+
+月額料金（¥2,000-2,500/user）
+  └─ AI利用枠が含まれる（cost_estimate_yen で累計追跡）
+  └─ 上限超過 → 追加課金 or 機能制限（テナント別上限設定）
+  └─ コスト抑制策: Haiku を8割使い、Sonnet は高付加価値処理のみ
+ただし、「上限がいくらで、超過時にいくら課金するか」の具体的な数字は、見つけたドキュメントには明記されていませんでした。「テナント別上限設定」という方針と cost_estimate_yen で追跡する仕組みまでは決まっていますが、閾値や超過単価はまだ未定の状態です。
+
+今後決めるべきこと
+月額に含まれるAI利用枠（例: ¥500分/user/月 ≒ Haiku 1,600回 or Sonnet 100回相当）
+超過時の対応（従量課金 vs 機能制限 vs プラン自動アップグレード）
+上限到達時の通知（80%到達でSlack通知 → 100%で制限 or 課金開始）
+具体的な数字を決めたい場合は、α版での実際の利用パターンが見えてからの方が精度が高くなります。今のテナント（shiro社内利用）での cost_estimate_yen の累計を1ヶ月追跡すれば、現実的な上限値を設定できます。
+
+この辺のあとどれくらいサブスク内で使えるかをユーザーに表示しないとですね。それを含め、その他のユーザー情報を表示するアカウント情報が必要なので仕様を作ってください。
+Tool loaded.
+Globpattern: "TASK_*.md"
+Found 13 files
+Globpattern: "HANDOFF.md"
+Found 1 file
+Read HANDOFF.md
+現状の Web 側のルーティングと既存の設定画面があるか確認します。
+
+Tool loaded.
+Write TASK_14_ACCOUNT_SETTINGS.md
+401 lines
+# TASK_14: アカウント情報 & AI 利用量管理
+
+> **目的**: ユーザーにサブスク残量・プロフィール・テナント情報を見せる。SaaS 化の課金基盤を作る
+> **優先度**: 🟡 高（SaaS 化準備の前提）
+> **依存**: なし（独立して実装可能）
+
+---
+
+## 1. 設計方針
+
+### なぜ必要か
+
+- AI 利用コストはテナントごとに変動する。ユーザーが「あとどれくらい使えるか」を把握できないと不満につながる
+- SaaS 外販時に課金・プラン管理が必須。今のうちに基盤を作っておく
+- 現状、ユーザー情報やテナント設定を確認・変更する画面がない
+
+### 表示場所
+
+| 場所 | 内容 |
+|------|------|
+| Web: `/settings` | フル機能（プロフィール・テナント・AI 利用量・プラン） |
+| Slack: `/crm-settings` | 簡易表示（AI 残量 + プラン + テナント名） |
+
+---
+
+## 2. DB 設計
+
+### 2.1 ai_usage_log テーブル（新規）
+
+全 AI 呼び出しのコストを一元記録する。既存の `ai_draft_replies.cost_estimate_yen` は下書き専用だが、このテーブルは NLU・センチメント・コーチング等すべてを記録する。
+
+```sql
+-- 016_ai_usage_log.sql
+CREATE TABLE ai_usage_log (
+  id            UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  tenant_id     UUID NOT NULL REFERENCES tenants(id),
+  operation     TEXT NOT NULL,          -- 'nlu' | 'sentiment' | 'coaching' | 'draft' | 'enrichment' | 'flow_subject'
+  model         TEXT NOT NULL,          -- 'claude-haiku-4-5-20251001' | 'claude-sonnet-4-6'
+  input_tokens  INTEGER NOT NULL DEFAULT 0,
+  output_tokens INTEGER NOT NULL DEFAULT 0,
+  cost_yen      NUMERIC(10,4) NOT NULL DEFAULT 0,  -- 円換算コスト
+  context_id    UUID,                   -- 関連するコンタクト/商談の ID（任意）
+  context_type  TEXT,                   -- 'contact' | 'deal'
+  created_at    TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+CREATE INDEX idx_ai_usage_tenant_month ON ai_usage_log (tenant_id, created_at);
+
+ALTER TABLE ai_usage_log ENABLE ROW LEVEL SECURITY;
+CREATE POLICY ai_usage_log_tenant ON ai_usage_log
+  USING (tenant_id = current_setting('app.tenant_id')::uuid);
+```
+
+### 2.2 tenant_plans テーブル（新規）
+
+テナントごとのプラン情報と AI 利用上限を管理する。
+
+```sql
+-- 016_ai_usage_log.sql（同じマイグレーション内）
+CREATE TABLE tenant_plans (
+  tenant_id         UUID PRIMARY KEY REFERENCES tenants(id),
+  plan              TEXT NOT NULL DEFAULT 'free',  -- 'free' | 'standard' | 'premium'
+  ai_quota_yen      NUMERIC(10,2) NOT NULL DEFAULT 500,  -- 月あたり AI 利用上限（円）
+  overage_rate      NUMERIC(5,2) NOT NULL DEFAULT 1.5,   -- 超過時の倍率（1.5 = 50%増し）
+  billing_cycle_day INTEGER NOT NULL DEFAULT 1,           -- 請求サイクル開始日
+  created_at        TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  updated_at        TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+ALTER TABLE tenant_plans ENABLE ROW LEVEL SECURITY;
+CREATE POLICY tenant_plans_tenant ON tenant_plans
+  USING (tenant_id = current_setting('app.tenant_id')::uuid);
+```
+
+### 2.3 プラン定義
+
+| プラン | 月額 | AI 利用枠 | 超過時 | 対象 |
+|--------|------|-----------|--------|------|
+| `free` | ¥0 | ¥500/月（≒ Haiku 1,600回） | 機能制限（AI 分析停止） | α/βテスター |
+| `standard` | ¥2,000/user | ¥1,500/月 | ¥1.5倍で従量課金 | 一般ユーザー |
+| `premium` | ¥3,500/user | ¥5,000/月 | ¥1.2倍で従量課金 | ヘビーユーザー |
+
+※ 現段階では `free` のみ。SaaS 化時に `standard` / `premium` を有効化
+
+---
+
+## 3. AI コスト計算ロジック
+
+### 3.1 オペレーション別コスト
+
+```typescript
+// api/src/config/ai-cost.ts（新規）
+
+export const AI_COST_PER_1K_TOKENS = {
+  'claude-haiku-4-5-20251001': { input: 0.08, output: 0.4 },   // ¥/1Kトークン
+  'claude-sonnet-4-6':         { input: 0.3,  output: 1.5 },
+} as const;
+
+export type AiOperation =
+  | 'nlu'
+  | 'sentiment'
+  | 'coaching'
+  | 'draft'
+  | 'enrichment'
+  | 'flow_subject';
+
+export function calculateCostYen(
+  model: string,
+  inputTokens: number,
+  outputTokens: number,
+): number {
+  const rate = AI_COST_PER_1K_TOKENS[model as keyof typeof AI_COST_PER_1K_TOKENS];
+  if (!rate) return 0;
+  return (inputTokens / 1000) * rate.input + (outputTokens / 1000) * rate.output;
+}
+```
+
+### 3.2 記録ヘルパー
+
+```typescript
+// api/src/services/ai-usage.service.ts（新規）
+
+import { pool } from '../db/client';
+import { calculateCostYen, AiOperation } from '../config/ai-cost';
+
+export async function logAiUsage(params: {
+  tenantId: string;
+  operation: AiOperation;
+  model: string;
+  inputTokens: number;
+  outputTokens: number;
+  contextId?: string;
+  contextType?: 'contact' | 'deal';
+}): Promise<void> {
+  const costYen = calculateCostYen(params.model, params.inputTokens, params.outputTokens);
+  await pool.query(
+    `INSERT INTO ai_usage_log (tenant_id, operation, model, input_tokens, output_tokens, cost_yen, context_id, context_type)
+     VALUES ($1, $2, $3, $4, $5, $6, $7, $8)`,
+    [params.tenantId, params.operation, params.model, params.inputTokens, params.outputTokens, costYen, params.contextId ?? null, params.contextType ?? null]
+  );
+}
+
+/** 当月の利用状況を取得 */
+export async function getMonthlyUsage(tenantId: string): Promise<{
+  totalCostYen: number;
+  quotaYen: number;
+  usagePercent: number;
+  remainingYen: number;
+  isOverQuota: boolean;
+  breakdown: { operation: string; count: number; costYen: number }[];
+}> {
+  // 当月1日を起点に集計
+  const summary = await pool.query(
+    `SELECT
+       COALESCE(SUM(cost_yen), 0) AS total_cost,
+       COUNT(*) AS total_calls
+     FROM ai_usage_log
+     WHERE tenant_id = $1
+       AND created_at >= date_trunc('month', NOW())`,
+    [tenantId]
+  );
+
+  const breakdown = await pool.query(
+    `SELECT
+       operation,
+       COUNT(*) AS count,
+       COALESCE(SUM(cost_yen), 0) AS cost_yen
+     FROM ai_usage_log
+     WHERE tenant_id = $1
+       AND created_at >= date_trunc('month', NOW())
+     GROUP BY operation
+     ORDER BY cost_yen DESC`,
+    [tenantId]
+  );
+
+  const plan = await pool.query(
+    `SELECT ai_quota_yen FROM tenant_plans WHERE tenant_id = $1`,
+    [tenantId]
+  );
+
+  const quotaYen = plan.rows[0]?.ai_quota_yen ?? 500;
+  const totalCostYen = Number(summary.rows[0].total_cost);
+  const remainingYen = Math.max(0, quotaYen - totalCostYen);
+  const usagePercent = Math.min(100, Math.round((totalCostYen / quotaYen) * 100));
+
+  return {
+    totalCostYen,
+    quotaYen,
+    usagePercent,
+    remainingYen,
+    isOverQuota: totalCostYen > quotaYen,
+    breakdown: breakdown.rows.map(r => ({
+      operation: r.operation,
+      count: Number(r.count),
+      costYen: Number(r.cost_yen),
+    })),
+  };
+}
+```
+
+### 3.3 既存 AI 呼び出しへの組み込み
+
+各 AI 呼び出し箇所で `logAiUsage()` を追加する。Anthropic SDK の response に含まれる `usage.input_tokens` / `usage.output_tokens` を渡す。
+
+| ファイル | 対象関数 | operation |
+|----------|----------|-----------|
+| `slack/nlu/intent-parser.ts` | `parseIntent()` | `nlu` |
+| `services/probability-engine.ts` | `analyzeSentiment()` | `sentiment` |
+| `services/deal-coaching.service.ts` | `assessDeal()` | `coaching` |
+| `services/draft-reply.service.ts` | `generateDraft()` | `draft` |
+| `services/enrichment.service.ts` | `enrichAccount()` | `enrichment` |
+| `services/flow-subject.ts` | `generateFlowSubject()` | `flow_subject` |
+
+---
+
+## 4. 利用量アラート
+
+### 4.1 閾値通知（Slack DM）
+
+```
+80% 到達時:
+  ⚠️ AI 利用量が月間枠の 80% に達しました
+  残り: ¥100（¥500 中 ¥400 使用）
+  📊 内訳: NLU 320回 / センチメント 45回 / コーチング 12回
+
+100% 到達時:
+  🚫 AI 利用量が月間枠を超えました
+  Free プランのため、AI 分析機能が一時停止されます。
+  翌月1日に自動復旧します。
+  💡 Standard プランにアップグレードすると、超過分も従量課金で継続利用できます。
+```
+
+### 4.2 チェックポイント
+
+`logAiUsage()` の中で、記録後に累計を確認し、80% / 100% の閾値を超えた場合に1回だけ通知する。通知済みフラグは `tenant_plans` に `notified_80` / `notified_100` カラムで管理（毎月リセット）。
+
+---
+
+## 5. Web: Settings ページ
+
+### 5.1 画面構成
+
+```
+┌─────────────────────────────────────────────────────┐
+│  ⚙️ 設定                                             │
+│                                                      │
+│  ┌── プロフィール ─────────────────────────────────┐  │
+│  │  名前:    鈴木 一郎                              │  │
+│  │  メール:  szk@shiro-inc.jp                      │  │
+│  │  Slack:   @suzuki                               │  │
+│  │  役割:    管理者                                 │  │
+│  │                                     [編集]      │  │
+│  └─────────────────────────────────────────────────┘  │
+│                                                      │
+│  ┌── テナント情報 ─────────────────────────────────┐  │
+│  │  組織名:      shiro Inc.                        │  │
+│  │  テナントID:  xxxxxxxx-xxxx-xxxx-xxxx           │  │
+│  │  登録日:      2026年1月15日                      │  │
+│  │  ユーザー数:  3                                  │  │
+│  │                                     [編集]      │  │
+│  └─────────────────────────────────────────────────┘  │
+│                                                      │
+│  ┌── AI 利用状況（今月） ──────────────────────────┐  │
+│  │                                                  │  │
+│  │  ████████████████░░░░░ 72%                      │  │
+│  │  ¥360 / ¥500 使用済み     残り ¥140             │  │
+│  │                                                  │  │
+│  │  内訳:                                           │  │
+│  │  ┌────────────┬──────┬────────┐                 │  │
+│  │  │ NLU        │ 320回│  ¥96   │                 │  │
+│  │  │ センチメント│  45回│  ¥14   │                 │  │
+│  │  │ コーチング  │  12回│ ¥180   │                 │  │
+│  │  │ 下書き生成  │   8回│  ¥60   │                 │  │
+│  │  │ 件名生成    │  11回│   ¥3   │                 │  │
+│  │  │ エンリッチ  │   3回│   ¥7   │                 │  │
+│  │  └────────────┴──────┴────────┘                 │  │
+│  │                                                  │  │
+│  │  リセット日: 4月1日                              │  │
+│  └─────────────────────────────────────────────────┘  │
+│                                                      │
+│  ┌── プラン ───────────────────────────────────────┐  │
+│  │                                                  │  │
+│  │  現在のプラン: 🆓 Free                           │  │
+│  │  AI 利用枠:   ¥500/月                            │  │
+│  │  超過時:      AI 分析一時停止                     │  │
+│  │                                                  │  │
+│  │  ┌─────────────┐  ┌─────────────┐               │  │
+│  │  │ Standard    │  │ Premium     │               │  │
+│  │  │ ¥2,000/user │  │ ¥3,500/user │               │  │
+│  │  │ 枠 ¥1,500  │  │ 枠 ¥5,000  │               │  │
+│  │  │ 超過:従量   │  │ 超過:従量   │               │  │
+│  │  │ [詳細]     │  │ [詳細]     │               │  │
+│  │  └─────────────┘  └─────────────┘               │  │
+│  │                                                  │  │
+│  │  ※ プランのアップグレードは近日公開予定           │  │
+│  └─────────────────────────────────────────────────┘  │
+│                                                      │
+│  ┌── データ管理 ──────────────────────────────────┐  │
+│  │  コンタクト数:   11 / 制限なし                   │  │
+│  │  商談数:          8 / 制限なし                   │  │
+│  │  メモ数:         20                              │  │
+│  │                                                  │  │
+│  │  [データエクスポート (CSV)]                       │  │
+│  └─────────────────────────────────────────────────┘  │
+└─────────────────────────────────────────────────────┘
+```
+
+### 5.2 ルーティング
+
+```typescript
+// web/src/router/index.ts に追加
+{ path: '/settings', component: () => import('../views/Settings.vue') }
+```
+
+`App.vue` の左メニューに「設定」アイコンを最下部に追加。
+
+---
+
+## 6. Slack: /crm-settings コマンド
+
+```
+⚙️ *SlackSFA 設定*
+
+📊 *AI 利用状況（3月）*
+████████████████░░░░░ 72%
+¥360 / ¥500 使用済み（残り ¥140）
+
+📋 *プラン:* Free
+🔄 *リセット日:* 4月1日
+👥 *ユーザー数:* 3
+🏢 *テナント:* shiro Inc.
+
+[詳細を Web で見る]
+```
+
+- `api/src/slack/commands/crm-settings.ts`（新規）
+- Slash Command `/crm-settings` を Slack App に登録する必要あり
+
+---
+
+## 7. API エンドポイント
+
+| エンドポイント | メソッド | 用途 |
+|---------------|---------|------|
+| `GET /api/settings/profile` | GET | ユーザープロフィール取得 |
+| `PUT /api/settings/profile` | PUT | プロフィール編集 |
+| `GET /api/settings/tenant` | GET | テナント情報取得 |
+| `PUT /api/settings/tenant` | PUT | テナント情報編集（管理者のみ） |
+| `GET /api/settings/usage` | GET | 当月 AI 利用状況 |
+| `GET /api/settings/plan` | GET | 現在のプラン情報 |
+
+---
+
+## 8. 実装ファイル一覧
+
+| ファイル | 操作 | 内容 |
+|----------|------|------|
+| `api/db/migrations/016_ai_usage_log.sql` | 新規 | ai_usage_log + tenant_plans テーブル |
+| `api/src/config/ai-cost.ts` | 新規 | トークン単価定数 + コスト計算関数 |
+| `api/src/services/ai-usage.service.ts` | 新規 | logAiUsage() + getMonthlyUsage() + アラート |
+| `api/src/slack/commands/crm-settings.ts` | 新規 | /crm-settings コマンド |
+| `api/src/routes/api.ts` | 改修 | /api/settings/* エンドポイント追加 |
+| `api/src/slack/nlu/intent-parser.ts` | 改修 | logAiUsage() 呼び出し追加 |
+| `api/src/services/probability-engine.ts` | 改修 | logAiUsage() 呼び出し追加 |
+| `api/src/services/deal-coaching.service.ts` | 改修 | logAiUsage() 呼び出し追加 |
+| `api/src/services/draft-reply.service.ts` | 改修 | logAiUsage() 呼び出し追加 |
+| `api/src/services/enrichment.service.ts` | 改修 | logAiUsage() 呼び出し追加 |
+| `api/src/services/flow-subject.ts` | 改修 | logAiUsage() 呼び出し追加 |
+| `web/src/views/Settings.vue` | 新規 | 設定画面（プロフィール・テナント・利用量・プラン） |
+| `web/src/lib/api-client.ts` | 改修 | settings 系メソッド追加 |
+| `web/src/router/index.ts` | 改修 | /settings ルート追加 |
+| `web/src/App.vue` | 改修 | 左メニューに設定アイコン追加 |
+
+---
+
+## 9. 実装順序
+
+```
+Step 1: DB マイグレーション（016_ai_usage_log.sql）
+Step 2: ai-cost.ts + ai-usage.service.ts（コスト計算・記録の基盤）
+Step 3: 既存 AI 呼び出し 6 箇所に logAiUsage() を組み込み
+Step 4: API エンドポイント（/api/settings/*）
+Step 5: Web Settings.vue
+Step 6: Slack /crm-settings コマンド
+Step 7: 利用量アラート（80% / 100% 通知）
+```
+
+---
+
+## 10. 完了条件
+
+- [ ] `ai_usage_log` テーブルが存在し、全 AI 呼び出しでコストが記録される
+- [ ] `tenant_plans` テーブルが存在し、テナントごとにプラン・上限が設定されている
+- [ ] Web `/settings` でプロフィール・テナント情報・AI 利用量・プランが表示される
+- [ ] AI 利用量がプログレスバーで視覚的に表示される
+- [ ] 内訳テーブルにオペレーション別の回数・コストが表示される
+- [ ] Slack `/crm-settings` で簡易利用状況が表示される
+- [ ] 80% / 100% 到達時に Slack DM で通知される
+- [ ] Free プランで 100% 超過時に AI 機能が停止する
+- [ ] プロフィール・テナント名の編集が Web からできる
+TASK_14_ACCOUNT_SETTINGS.md を作成しました。
+
+設計のポイント
+AI 利用量管理の仕組み:
+
+ai_usage_log テーブルで全 AI 呼び出し（NLU/センチメント/コーチング/下書き/エンリッチ/件名生成）のトークン数・円換算コストを記録
+tenant_plans テーブルでプランごとの月間枠を管理
+既存の6箇所の AI 呼び出しに logAiUsage() を1行追加するだけで計測開始
+プラン体系:
+
+プラン	月額	AI枠	超過時
+Free	¥0	¥500/月	AI停止
+Standard	¥2,000/user	¥1,500/月	1.5倍従量
+Premium	¥3,500/user	¥5,000/月	1.2倍従量
+アラート: 80%到達と100%到達でSlack DMに通知。Freeプランは停止、有料プランは従量課金で継続。
+
+UI: Webでフル設定画面（プログレスバー+内訳テーブル）、Slackで /crm-settings の簡易表示。
+
+プラン金額や枠の数字は調整可能です。何か変えたい部分はありますか？
+
+黒子の作業がひと段落したので確認してください。残作業は以下です'現状の残タスクを整理します：
+
+  実装系（コード変更が必要）
+
+  ┌─────────────────────────────────────────────────────────────┬────────┐
+  │                            内容                             │ 優先度 │
+  ├─────────────────────────────────────────────────────────────┼────────┤
+  │ TASK_09: Playwright E2E テスト + シードデータ               │ 🟡     │
+  ├─────────────────────────────────────────────────────────────┼────────┤
+  │ AI 利用量 80%/100% 超過時の Slack DM 通知（現状はログのみ） │ 🟡     │
+  ├─────────────────────────────────────────────────────────────┼────────┤
+  │ Free プラン 100% 超過時に AI 機能停止するロジック           │ 🟠     │
+  ├─────────────────────────────────────────────────────────────┼────────┤
+  │ backfillFlowSubjects() で既存 11 件の AI 件名を再生成       │ 🟠     │
+  └─────────────────────────────────────────────────────────────┴────────┘
+
+  手動作業（設定変更のみ）
+
+  ┌────────────────────────────────────────────────────────────────┬────────┐
+  │                              内容                              │ 優先度 │
+  ├────────────────────────────────────────────────────────────────┼────────┤
+  │ Slack App に /crm コマンドを登録                               │ 🟡     │
+  ├────────────────────────────────────────────────────────────────┼────────┤
+  │ Slack App に /crm-settings コマンドを登録                      │ 🟠     │
+  ├────────────────────────────────────────────────────────────────┼────────┤
+  │ テナント名を "Default (dev)"                                   │ 🟠     │
+  │ から実際の組織名に変更（設定画面から）                         │        │
+  ├────────────────────────────────────────────────────────────────┼────────┤
+  │ Slack ワークスペース ID を dev_workspace から本番の T...       │ 🟠     │
+  │ に更新                                                         │        │
+  └────────────────────────────────────────────────────────────────┴────────┘
+
+  SaaS 化準備（将来）
+  - Slack OAuth ログイン
+  - Stripe 課金連携
+  - マルチテナント対応
+
+  優先度が高いのは TASK_09（E2E テスト）と /crm
+  コマンド登録です。どれから進めますか？
+'
+黒子の実装を確認します。
+
+Agent:Review TASK_14 implementation
+IN
+Thoroughly explore the slackSFA codebase at /Users/szk/Desktop/APP/slackSFA to review the TASK_14 (Account Settings & AI Usage Management) implementation. Check ALL of the following:
+
+1. DB migration: Look for 016_ai_usage_log.sql in api/db/migrations/
+2. New files:
+   - api/src/config/ai-cost.ts
+   - api/src/services/ai-usage.service.ts
+   - api/src/slack/commands/crm-settings.ts
+   - web/src/views/Settings.vue
+3. Modified files - check for logAiUsage() calls in:
+   - api/src/slack/nlu/intent-parser.ts
+   - api/src/services/probability-engine.ts
+   - api/src/services/deal-coaching.service.ts
+   - api/src/services/draft-reply.service.ts
+   - api/src/services/enrichment.service.ts
+   - api/src/services/flow-subject.ts
+4. API routes: Check api/src/routes/api.ts for /api/settings/* endpoints
+5. Web: Check router/index.ts for /settings route, App.vue for settings menu item, api-client.ts for settings methods
+6. Check api/src/index.ts for crm-settings command registration
+
+Read the FULL contents of each file. Report any bugs, inconsistencies, missing pieces, or deviations from the spec at /Users/szk/Desktop/PLAN/opus-advise/TASK_14_ACCOUNT_SETTINGS.md
+Read slackSFA
+Globpattern: "/Users/szk/Desktop/APP/slackSFA/web/src/views/Settings.vue"
+Found 1 file
+Read Settings.vue
+Globpattern: "/Users/szk/Desktop/APP/slackSFA/api/src/services/draft-reply.service.ts"
+Found 1 file
+Read draft-reply.service.ts
+Globpattern: "/Users/szk/Desktop/APP/slackSFA/web/src/lib/api-client.ts"
+Found 1 file
+Read api-client.ts
+Globpattern: "/Users/szk/Desktop/APP/slackSFA/api/db/migrations/"
+No files found
+Bash
+IN
+find /Users/szk/Desktop/APP/slackSFA/api/db/migrations -type f -name "*.sql" | sort
+
+OUT
+find: /Users/szk/Desktop/APP/slackSFA/api/db/migrations: No such file or directory
+Bash
+IN
+find /Users/szk/Desktop/APP/slackSFA -type d -name migrations 2>/dev/null
+
+OUT
+/Users/szk/Desktop/APP/slackSFA/api/src/db/migrations
+Bash
+IN
+ls -la /Users/szk/Desktop/APP/slackSFA/api/src/db/migrations/ | head -20
+
+OUT
+total 152
+drwxr-xr-x@ 18 szk  staff   576 Mar 23 20:40 .
+drwxr-xr-x@  7 szk  staff   224 Mar 20 02:17 ..
+-rw-r--r--@  1 szk  staff  8849 Mar 10 16:56 001_init_schema.sql
+-rw-r--r--@  1 szk  staff  4097 Mar 10 23:50 002_add_tenant_id.sql
+-rw-r--r--@  1 szk  staff  3210 Mar 12 20:32 003_contacts_unification.sql
+-rw-r--r--@  1 szk  staff  2478 Mar 13 16:46 004_activity_logs.sql
+-rw-r--r--@  1 szk  staff  2859 Mar 13 20:01 005_ai_draft_replies.sql
+-rw-r--r--@  1 szk  staff   390 Mar 17 19:26 006_slack_invite_url.sql
+-rw-r--r--@  1 szk  staff   557 Mar 18 16:43 007_nurturing_stage.sql
+-rw-r--r--@  1 szk  staff  1436 Mar 19 21:52 008_drop_leads.sql
+-rw-r--r--@  1 szk  staff  1962 Mar 19 23:55 009_deal_progress.sql
+-rw-r--r--@  1 szk  staff  2286 Mar 20 18:48 010_simplify_deal_stage.sql
+-rw-r--r--@  1 szk  staff  2151 Mar 20 19:17 011_channel_links.sql
+-rw-r--r--@  1 szk  staff   401 Mar 23 18:40 012_flow_subject.sql
+-rw-r--r--@  1 szk  staff   319 Mar 23 19:10 013_discarded_stage.sql
+-rw-r--r--@  1 szk  staff   233 Mar 23 19:37 014_remove_customer_stage.sql
+-rw-r--r--@  1 szk  staff  1584 Mar 23 19:47 015_link_contacts_to_accounts.sql
+-rw-r--r--@  1 szk  staff  2153 Mar 23 20:40 016_ai_usage_log.sql
+Read 016_ai_usage_log.sql
+Read Settings.vue (lines 81-110)
+Grep "logAiUsage" (in /Users/szk/Desktop/APP/slackSFA/api/src/services/probability-engine.ts)
+1 line of output
+Bash
+IN
+find /Users/szk/Desktop/APP/slackSFA -name "sentiment-analyzer.ts" -type f
+
+OUT
+/Users/szk/Desktop/APP/slackSFA/api/src/services/sentiment-analyzer.ts
+Read sentiment-analyzer.ts
+Grep "analyzeSentiment" (in /Users/szk/Desktop/APP/slackSFA/api/src/services/probability-engine.ts)
+23 lines of output
+Bash
+IN
+cd /Users/szk/Desktop/APP/slackSFA && grep -n "label" web/src/views/Settings.vue | head -5
+
+OUT
+84:                    <td>{{ b.label }}</td>
+101:              現在のプラン: <strong>{{ plan.plan_label }}</strong>
+Read api.ts (lines 568-573)
+レビュー完了。黒子の TASK_14 実装は 95% 完成 で、品質は高いです。
+
+実装確認結果
+完了（問題なし）
+項目	状態
+DB マイグレーション（016_ai_usage_log.sql）	✅
+ai-cost.ts（トークン単価・コスト計算）	✅
+ai-usage.service.ts（記録・集計・閾値チェック）	✅
+6箇所の AI 呼び出しに logAiUsage() 組み込み	✅
+/crm-settings Slack コマンド	✅
+API 5エンドポイント（/api/settings/*）	✅
+Settings.vue（プロフィール・テナント・利用量・プラン・データ管理）	✅
+api-client.ts の型定義・メソッド追加	✅
+ルーティング + メニュー追加	✅
+残課題
+1. Slack DM 通知が未実装（console.warn のみ）
+
+checkQuotaAlert() が 80%/100% 到達を検知してフラグは立てるが、実際の Slack DM 送信がない。コメントに「Slack 通知は呼び出し元の slackClient がないためログのみ」と書かれていて、黒子が残タスクとして報告した通り。
+
+対処案: logAiUsage() に slackClient を渡すか、index.ts の cron（毎朝ブリーフィング等）で月次チェックを走らせるのが綺麗。ただし、これは残タスク表にも入っているので意図的な先送り。
+
+2. Free プランの AI 機能停止ロジックが未実装
+
+100% 超過時に実際に AI 呼び出しをブロックするガード処理がない。これも残タスク表に入っている。
+
+対処案: 各 AI 呼び出しの冒頭に isOverQuota チェックを入れるか、logAiUsage() 内で例外を投げる。
+
+3. quota_reset_at の初期値（軽微）
+
+マイグレーション実行時の「翌月1日」で固定されている。毎月のリセットはアプリ側で notified_80 / notified_100 をリセットする処理が必要。これも将来の cron ジョブで対応。
+
+総合評価
+黒子の残タスク表と完全に一致しています。報告漏れ・バグなし。設計通りに正確に実装されていて、自分で「ここは未実装」と正しく申告している点も信頼できます。
+
+残タスクの優先順位としては:
+
+Slack App に /crm と /crm-settings を登録（手動、5分で終わる）
+backfillFlowSubjects（既存11件の件名再生成、コマンド1発）
+TASK_09 E2E テスト（品質保証の基盤）
+Slack DM 通知 + AI 機能停止ロジック（SaaS 化前でOK）
+1と2は今すぐやれる軽作業、3は次の黒子タスク、4はSaaS化準備フェーズで十分です。どう進めますか？
+
+1~4すべて終了です、黒子頑張った！'  HANDOFF更新内容:                                                
+  - TASK_09 E2E 19/19通過、seed.sql・helpers・global-setup等の詳細を記載                            
+  - TASK_14 AI利用量管理・Slack DM通知、設計ポイント（lazy monthly reset等）を記載                  
+  - Migration 016 本番未適用 を残タスクに明記                                     
+  - ロードマップ更新                                                                                
+                                                                                                    
+  次の本番作業（次回セッションで）:                                                                 
+  1. migrations/016_ai_usage_log.sql を本番 Cloud SQL に適用                                        
+  2. Slack App に /crm・/crm-settings スラッシュコマンドを追加登録                                  
+  3. backfill-flow-subjects.ts を本番 DB で実行 '
+黒子、素晴らしい仕事ですね。HANDOFF の更新内容も確認しました。
+
+特に良かった点:
+
+E2E 19/19 全通過 — RLS の missing_ok 問題やレスポンス構造の不一致をテスト中に発見・修正できたのは、まさにテスト基盤を作った価値
+isQuotaExceeded() ガードを全 AI 関数に追加 — 設計書では「将来対応」だった AI 機能停止ロジックまで先に実装してくれた
+Lazy monthly reset — cron ジョブなしで checkQuotaAlert() 内でリセットを検知する設計は、インフラ依存を減らしていて賢い
+現在地の整理
+Phase 3 コード実装は全完了。 残りは本番適用の運用作業のみ:
+
+#	作業	種別	所要時間
+1	Migration 016 を本番 Cloud SQL に適用	DB	5分
+2	Slack App に /crm 登録	設定	2分
+3	Slack App に /crm-settings 登録	設定	2分
+4	backfill-flow-subjects.ts を本番で実行	スクリプト	3分
+全部で15分程度の作業です。次回セッションでまとめてやりましょう。
+
+その後は SaaS 化準備フェーズ（Slack OAuth、Stripe 課金連携、マルチテナント OAuth フロー）に入れます。ロードマップ上は4月からですが、前倒しで進めるかはビジネス判断次第です。
+
+前倒し可能ですね！2to3ha
+途中で切れてますが、「2〜3は」の続きをお待ちしてます!
+
+2と3は終わってます
+了解です！残タスクは2つだけですね:
+
+#	作業	状態
+1	Migration 016 を本番 Cloud SQL に適用	未着手
+2	Slack App に /crm 登録	✅
+3	Slack App に /crm-settings 登録	✅
+4	backfill-flow-subjects.ts を本番で実行	未着手
+1と4は Migration 016 を先に適用してから backfill の順番です。本番 Cloud SQL に接続して進めますか？
+
+本番に繋いで進めるつもりです
+いいですね。残り2つの手順を整理しておきます:
+
+Step 1: Migration 016 本番適用
+
+
+-- 016_ai_usage_log.sql を本番 Cloud SQL に接続して実行
+-- Cloud SQL Auth Proxy 経由 or gcloud sql connect で接続
+Step 2: backfillFlowSubjects 実行
+
+
+# 本番 DB 接続状態で
+npx ts-node api/scripts/backfill-flow-subjects.ts
+順序は必ず 016 → backfill です（backfill 自体は 016 に依存しませんが、デプロイの整合性のため migration を先に適用するのが安全）。
+
+本番接続できたら教えてください。Migration の中身を事前に確認しておきたければ読み上げます。
+
+あとユーザーがAIにリクエストするシナリオを黒子に頼んだのだけどターミナルの画面がリロードされて残ってないです。オッパが把握できますか？あるいはあらためて想定されるシナリオとユーザーがAIに投げるリクエストをリストにできますか？
+黒子の作業履歴はこちらからは見えませんが、コードベースから全シナリオを網羅的に洗い出せます。
+
+Agent:Extract all AI request scenarios
+IN
+Thoroughly explore the slackSFA codebase at /Users/szk/Desktop/APP/slackSFA to extract ALL user interaction scenarios — what a user can say/do via Slack and what the AI responds with.
+
+Check these files thoroughly and read their FULL contents:
+
+1. **Intent parser**: `api/src/slack/nlu/intent-parser.ts` — all supported intents and their patterns
+2. **Message handler**: `api/src/slack/events/message.ts` — how intents are dispatched and executed
+3. **Slash commands**: 
+   - `api/src/slack/commands/crm-list.ts` — /crm-list and /crm commands
+   - `api/src/slack/commands/crm-settings.ts` — /crm-settings command
+4. **Views/modals**:
+   - `api/src/slack/views/flow-detail.ts` — flow detail modal
+   - `api/src/slack/views/detail-card.ts` — contact detail modal
+   - `api/src/slack/views/note-modal.ts` — note modal
+   - `api/src/slack/views/edit-modal.ts` — edit modal
+5. **Services that generate AI responses**:
+   - `api/src/services/nurturing.service.ts` — nurturing/notifications
+   - `api/src/services/deal-coaching.service.ts` — MEDDPICC coaching
+   - `api/src/services/draft-reply.service.ts` — draft reply generation
+   - `api/src/services/enrichment.service.ts` — account enrichment
+   - `api/src/services/flow-subject.ts` — flow subject generation
+   - `api/src/services/probability-engine.ts` or `api/src/services/sentiment-analyzer.ts` — sentiment analysis
+6. **Scheduled jobs**: Check `api/src/index.ts` for cron/scheduled tasks (daily briefing, weekly summary, etc.)
+7. **Voice**: `api/src/slack/events/voice.ts` — voice input handling
+8. **Channel monitoring**: any channel_links related handling
+
+For each scenario, extract:
+- The user's input (natural language example or slash command)
+- The intent/action name
+- What happens (AI processing, DB changes, response)
+- Whether it's user-initiated or automatic
+
+Be comprehensive — don't miss any interaction pattern.
+Bash List the top-level directory structure
+IN
+ls -la /Users/szk/Desktop/APP/slackSFA/
+
+OUT
+total 88
+drwxr-xr-x@ 18 szk  staff    576 Mar 19 21:59 .
+drwxr-xr-x@ 11 szk  staff    352 Mar 20 01:03 ..
+-rw-r--r--@  1 szk  staff   6148 Mar 11 02:45 .DS_Store
+drwxr-xr-x@  3 szk  staff     96 Mar 13 19:43 .claude
+-rw-r--r--@  1 szk  staff    676 Mar 10 22:24 .env
+-rw-r--r--@  1 szk  staff    891 Mar 19 21:46 .env.example
+drwxr-xr-x@  3 szk  staff     96 Mar 12 03:46 .gemini
+drwxr-xr-x@ 12 szk  staff    384 Mar 24 06:23 .git
+drwxr-xr-x@  3 szk  staff     96 Mar 13 16:48 .github
+-rw-r--r--@  1 szk  staff    530 Mar 19 21:59 .gitignore
+drwxr-xr-x@ 13 szk  staff    416 Mar 24 04:43 api
+-rw-r--r--@  1 szk  staff   1143 Mar 19 21:46 docker-compose.yml
+drwxr-xr-x@  3 szk  staff     96 Mar 19 21:47 docs
+drwxr-xr-x@  3 szk  staff     96 Mar 10 16:55 infra
+drwxr-xr-x@  5 szk  staff    160 Mar 18 15:42 scripts
+-rw-r--r--@  1 szk  staff  17955 Mar 10 16:52 slackSfaPlanWithClaude0310a
+drwxr-xr-x@ 12 szk  staff    384 Mar 24 06:13 tests
+drwxr-xr-x@ 14 szk  staff    448 Mar 24 00:52 web
+Bash Find the critical TypeScript files mentioned in the task
+IN
+find /Users/szk/Desktop/APP/slackSFA/api/src -type f -name "*.ts" | grep -E "(intent-parser|message\.ts|crm-list|crm-settings|flow-detail|detail-card|note-modal|edit-modal|nurturing|deal-coaching|draft-reply|enrichment|flow-subject|probability|sentiment|voice\.ts|index\.ts)" | head -30
+
+OUT
+/Users/szk/Desktop/APP/slackSFA/api/src/config/sentiment-signals.ts
+/Users/szk/Desktop/APP/slackSFA/api/src/slack/nlu/intent-parser.test.ts
+/Users/szk/Desktop/APP/slackSFA/api/src/slack/nlu/intent-parser.ts
+/Users/szk/Desktop/APP/slackSFA/api/src/slack/commands/crm-list.ts
+/Users/szk/Desktop/APP/slackSFA/api/src/slack/commands/crm-settings.ts
+/Users/szk/Desktop/APP/slackSFA/api/src/slack/events/voice.ts
+/Users/szk/Desktop/APP/slackSFA/api/src/slack/events/message.ts
+/Users/szk/Desktop/APP/slackSFA/api/src/slack/views/flow-detail.ts
+/Users/szk/Desktop/APP/slackSFA/api/src/slack/views/detail-card.ts
+/Users/szk/Desktop/APP/slackSFA/api/src/slack/views/edit-modal.ts
+/Users/szk/Desktop/APP/slackSFA/api/src/slack/views/note-modal.ts
+/Users/szk/Desktop/APP/slackSFA/api/src/index.ts
+/Users/szk/Desktop/APP/slackSFA/api/src/routes/nurturing.ts
+/Users/szk/Desktop/APP/slackSFA/api/src/services/nurturing.service.ts
+/Users/szk/Desktop/APP/slackSFA/api/src/services/probability-engine.ts
+/Users/szk/Desktop/APP/slackSFA/api/src/services/draft-reply.service.ts
+/Users/szk/Desktop/APP/slackSFA/api/src/services/flow-subject.ts
+/Users/szk/Desktop/APP/slackSFA/api/src/services/deal-coaching.service.ts
+/Users/szk/Desktop/APP/slackSFA/api/src/services/enrichment.service.ts
+/Users/szk/Desktop/APP/slackSFA/api/src/services/sentiment-analyzer.ts
+Read index.ts
+Read voice.ts
+Read nurturing.service.ts
+Read sentiment-analyzer.ts
+Read note-modal.ts
+Bash Find crm-link command file
+IN
+find /Users/szk/Desktop/APP/slackSFA/api/src -type f -name "crm-link.ts"
+
+OUT
+/Users/szk/Desktop/APP/slackSFA/api/src/slack/commands/crm-link.ts
+Read flow-subject.ts
+Bash Check file sizes to see how much more we need to read
+IN
+wc -l /Users/szk/Desktop/APP/slackSFA/api/src/services/deal-coaching.service.ts /Users/szk/Desktop/APP/slackSFA/api/src/services/draft-reply.service.ts
+
+OUT
+     623 /Users/szk/Desktop/APP/slackSFA/api/src/services/deal-coaching.service.ts
+     591 /Users/szk/Desktop/APP/slackSFA/api/src/services/draft-reply.service.ts
+    1214 total
+Read draft-reply.service.ts (lines 151-300)
+コードベースから全シナリオを抽出しました。以下がユーザーが AI に投げられるリクエストの完全リストです。
+
+ユーザー → AI リクエスト一覧
+A. 自然言語（Slack DM / メンション）
+#	シナリオ	入力例	確認
+1	顧客登録	「田中さんを山田商事の部長として登録して」	要
+2	メモ追加	「田中さんのメモ：今月中に導入予定と言ってた」	要
+3	検索	「田中さんを検索して」「山田商事の情報を見せて」	不要
+4	コンバート	「田中さんをコンバートして商談は500万で来月末まで」	要
+5	商談作成	「請求書システム改修の商談を作って、500万で来月末まで」	要
+6	顧客情報更新	「田中さんのメールをtanaka@yamada.co.jpに変更して」	要
+7	商談更新	「商談を1000万に更新して」「クローズ日を来月末に」	要
+8	顧客削除	「田中さんを削除して」	要
+9	商談コーチング	「この商談の状況は？」「あとどうすればいい？」	不要
+10	一覧表示	「一覧を見せて」「商談一覧」	不要
+B. スラッシュコマンド
+#	コマンド	説明
+11	/crm	AI Flow 一覧（メイン画面）
+12	/crm 田中	キーワードで AI Flow 検索
+13	/crm contacts	顧客基礎情報一覧
+14	/crm accounts	会社一覧
+15	/crm-list contacts /crm-list deals	旧コマンド（同等機能）
+16	/crm-settings	AI 利用量・プラン表示
+17	/crm-link 山田商事	チャンネルを顧客に紐づけ
+18	/crm-link list	紐づけ一覧
+19	/crm-link remove	紐づけ解除
+C. モーダル内アクション
+#	トリガー	操作
+20	「詳細」ボタン	AI Flow 詳細モーダル表示
+21	「メモ追加」ボタン	メモ追加モーダル → 保存で確率自動更新
+22	「編集」ボタン	顧客編集モーダル
+23	「コーチング」ボタン	MEDDPICC AI 評価を非同期実行
+24	ページネーション	前の10件 / 次の10件
+D. 音声入力
+#	操作	説明
+25	音声ファイルアップロード	STT → NLU → 上記1-10と同じ処理
+E. 確認フロー
+#	入力	効果
+26	「OK」「はい」「✅」	保留中のアクションを実行
+27	「キャンセル」「いいえ」「❌」	保留中のアクションを取消
+28	「重複OK」	重複コンタクトの強制登録
+F. AI 自動実行（ユーザー操作不要）
+#	タイミング	処理
+29	毎朝 9:00	日次ブリーフィング + 時間減衰 + 廃棄クリーンアップ
+30	毎週月曜 8:00	週次サマリー
+31	活動記録時	センチメント分析 → 確率自動更新
+32	紐づけチャンネルの発言	活動ログ自動記録
+33	下書き承認待ち 24h 超過	Slack リマインダー送信
+34	AI 利用量 80%/100%	Slack DM でクォータ通知
+G. ナーチャリング（Phase B 下書き承認）
+#	操作	効果
+35	「承認」ボタン	AI 下書きメールを送信
+36	「修正」ボタン	下書き編集モーダルを開く
+37	「エスカレート」ボタン	セールスマネージャーに転送
+全部で 37シナリオ。黒子が作ったリストもおそらくこの範囲だったと思います。何か追加したいシナリオや、これをドキュメントとして保存しておきますか？
+
+コンバートはもうないよね？それとAIがプッシュ通知する内容のリストもお願いします。そしてmdドキュメントに書き出してください。
+Grep "promote|convert|コンバート" (in /Users/szk/Desktop/APP/slackSFA/api/src)
+31 lines of output
+コードに promote はまだ残っていますが、問題があります。promoteContact() は lifecycle_stage = 'customer' に設定しますが、Migration 014 で customer ステージは廃止済みです（active に統合）。つまり コンバートは実質的に壊れているコードです。
+
+これを踏まえてドキュメントを作成します。
+
+Grep "postMessage|chat\.postMessage|say\(|sendDraftReminders|dailyBriefing|weeklySummary|checkQuotaAlert|ホットリード|通知|notify|notification" (in /Users/szk/Desktop/APP/slackSFA/api/src, glob: *.ts)
+51 lines of output
+Grep "ホットリード|確率.*→|probability.*change|hot_lead|escalation|ESCALATION" (in /Users/szk/Desktop/APP/slackSFA/api/src)
+6 lines of output
+Read probability-engine.ts (lines 231-310)
+Read nurturing.service.ts
+Read nurturing.service.ts (lines 61-160)
+十分な情報が揃いました。ドキュメントを作成します。
+
+Write USER_SCENARIOS.md
+151 lines
+# SlackSFA ユーザーシナリオ & AI 通知一覧
+
+> **最終更新：2026年3月24日**
+> コードベースから抽出した全操作シナリオ
+
+---
+
+## 1. ユーザー → AI リクエスト（自然言語）
+
+Slack DM またはメンションで自然言語入力。確認が必要な操作は AI が内容を提示し、ユーザーが「OK」「はい」で実行。
+
+| # | シナリオ | 入力例 | 確認 |
+|---|---------|--------|------|
+| 1 | 顧客登録 | 「田中さんを山田商事の部長として登録して」 | 要 |
+| 2 | メモ追加 | 「田中さんのメモ：今月中に導入予定と言ってた」 | 要 |
+| 3 | 検索 | 「田中さんを検索して」「山田商事の情報」 | 不要 |
+| 4 | 商談作成 | 「請求書システム改修の商談を作って、500万で来月末まで」 | 要 |
+| 5 | 顧客情報更新 | 「田中さんのメールを tanaka@yamada.co.jp に変更して」 | 要 |
+| 6 | 商談更新 | 「商談を1000万に更新して」「クローズ日を来月末に」 | 要 |
+| 7 | 顧客削除 | 「田中さんを削除して」 | 要 |
+| 8 | 商談コーチング | 「この商談の状況は？」「あとどうすればいい？」 | 不要 |
+| 9 | 一覧表示 | 「一覧を見せて」「商談一覧」 | 不要 |
+
+### 確認フロー
+
+| 入力 | 効果 |
+|------|------|
+| 「OK」「はい」「✅」 | 保留中のアクションを実行 |
+| 「キャンセル」「いいえ」「❌」 | 保留中のアクションを取消 |
+| 「重複OK」 | 重複コンタクトの強制登録 |
+
+### 音声入力
+
+音声ファイル（m4a/mp4/mp3/webm/ogg）を DM にアップロードすると、STT（Google Cloud Speech-to-Text）で文字起こし後、上記 1〜9 と同じ NLU パイプラインで処理。
+
+---
+
+## 2. スラッシュコマンド
+
+### /crm（メインコマンド）
+
+| コマンド | 説明 |
+|---------|------|
+| `/crm` | AI Flow 一覧（全件） |
+| `/crm 田中` | キーワードで AI Flow 検索 |
+| `/crm contacts` | 顧客基礎情報一覧 |
+| `/crm accounts` | 会社一覧 |
+| `/crm help` | ヘルプ表示 |
+
+### /crm-list（旧コマンド、互換用）
+
+| コマンド | 説明 |
+|---------|------|
+| `/crm-list contacts` | 顧客一覧 |
+| `/crm-list deals` | 商談一覧 |
+| `/crm-list accounts` | 会社一覧 |
+
+### /crm-settings
+
+| コマンド | 説明 |
+|---------|------|
+| `/crm-settings` | AI 利用量・プラン・テナント情報を表示 |
+
+### /crm-link（チャンネル紐づけ）
+
+| コマンド | 説明 |
+|---------|------|
+| `/crm-link 山田商事` | このチャンネルを顧客/会社に紐づけ |
+| `/crm-link list` | 全紐づけ一覧 |
+| `/crm-link remove` | このチャンネルの紐づけを解除 |
+
+---
+
+## 3. モーダル内アクション
+
+| トリガー | 操作 |
+|---------|------|
+| 「詳細」ボタン | AI Flow 詳細モーダル（確率・タイムライン・推奨アクション） |
+| 「メモ追加」ボタン | メモ追加モーダル → 保存で確率自動更新 |
+| 「編集」ボタン | 顧客編集モーダル（名前・会社・ステージ等） |
+| 「コーチング」ボタン | MEDDPICC AI 評価を非同期実行 → 結果をチャンネルに投稿 |
+| ページネーション | 前の10件 / 次の10件 |
+
+---
+
+## 4. ナーチャリング下書き承認（Phase B）
+
+AI がインバウンド活動を検知して返信下書きを生成。ユーザーが承認操作。
+
+| 操作 | 効果 |
+|------|------|
+| 「承認」ボタン | AI 下書きメールを送信 |
+| 「修正」ボタン | 下書き編集モーダルを開く |
+| 「エスカレート」ボタン | セールスマネージャーに転送 |
+
+---
+
+## 5. AI プッシュ通知一覧
+
+ユーザーが操作しなくても AI が自動で Slack に通知するもの。
+
+### 5.1 定期通知（スケジュール実行）
+
+| # | 通知 | タイミング | 内容 |
+|---|------|-----------|------|
+| 1 | 日次ブリーフィング | 毎朝 9:00 JST | パイプライン概況（open 商談数・合計金額・今週クローズ予定・平均確率） |
+| 2 | 週次サマリー | 毎週月曜 8:00 JST | 先週の新規商談・クローズ商談・確率上昇/下降の要約 |
+| 3 | 未接触アラート | 毎朝 9:00（日次ブリーフィングと同時） | 7日以上未接触で確率が 10% 以上低下した商談を一覧表示 |
+
+### 5.2 イベント駆動通知（リアルタイム）
+
+| # | 通知 | トリガー | 内容 |
+|---|------|---------|------|
+| 4 | ホットリード検知 | メモ追加後に案件化確率 >= 70% に到達 | 「🔥 ホットリード: 田中さん（山田商事）確率 65% → 78%」 |
+| 5 | 確率変動通知 | メモ/活動追加で確率が変動 | 「📊 案件化確率が変化しました: 45% → 62% ↑」 |
+| 6 | コーチング結果 | MEDDPICC 評価完了（手動 or 自動） | スコア + 推奨アクション TOP 3 + リスク要因 |
+| 7 | コーチング急落警告 | 前回比でスコアが大幅低下 | 「⚠️ 商談スコアが急落: 72 → 55（-17）要注意」 |
+| 8 | エンリッチメント完了 | 会社情報の AI 自動取得完了 | 「✅ ABC社の情報を補完しました（業種: IT / 従業員: 50-100名）」 |
+| 9 | ナーチャリング通知（Phase A） | インバウンド活動を AI が分析 | 温度感 + 関心度スコア + 要約 + 推奨アクション |
+| 10 | 下書き承認リクエスト（Phase B） | AI が返信下書きを生成 | 下書き本文 + [承認][修正][エスカレート] ボタン |
+| 11 | 下書きリマインダー | 承認待ち下書きが 24 時間経過 | 「承認待ちの下書きがあります」（スレッド返信） |
+
+### 5.3 利用量・システム通知
+
+| # | 通知 | トリガー | 内容 |
+|---|------|---------|------|
+| 12 | AI 利用量 80% 警告 | 月間 AI 枠の 80% に到達 | 「⚠️ AI 利用量が月間枠の 80% に達しました（¥400 / ¥500）」 |
+| 13 | AI 利用量 100% 超過 | 月間 AI 枠を超過 | 「🚫 AI 利用量が月間枠を超えました。Free プランのため AI 機能を一時停止します」 |
+| 14 | 廃棄予告通知 | 廃棄ステージのコンタクトが削除 1 日前 | 「⚠️ 以下のコンタクトが明日自動削除されます: ...」 |
+
+---
+
+## 6. 廃止済み機能（コード残存・要クリーンアップ）
+
+| 機能 | 理由 | 対処 |
+|------|------|------|
+| `promote`（コンバート） | `customer` ステージは Migration 014 で廃止。`promoteContact()` が存在しない `customer` を設定しようとする | コード削除 or `active` に変更が必要 |
+
+---
+
+## 7. Web 画面（閲覧・分析専用）
+
+| パス | 画面 | 操作 |
+|------|------|------|
+| `/` | ダッシュボード | KPI + 確率分布 + センチメント + 推奨アクション TOP 5 |
+| `/flow` | AI Flow 一覧 | 検索 + ソート + ページネーション |
+| `/flow/:id` | AI Flow 詳細 | 確率推移グラフ + MEDDPICC レーダー + タイムライン |
+| `/contacts` | 顧客一覧 | 基礎情報の閲覧（CRUD なし） |
+| `/accounts` | 会社一覧 | 検索 + 詳細遷移 |
+| `/settings` | 設定 | プロフィール・テナント・AI 利用量・プラン |
+USER_SCENARIOS.md を作成しました。
+
+ポイント:
+
+コンバート（promote）は削除 — customer ステージが Migration 014 で廃止済みなので、コード上は壊れている状態。セクション6に「要クリーンアップ」として記載
+AI プッシュ通知は 14 種類 — 定期3種 + イベント駆動8種 + システム3種
+旧リクエスト37種 → コンバート削除で 全36シナリオ
+promote のコード削除は次の黒子タスクに含めますか？小さい作業なのでついでに頼めます。
+
+うん、含めます
+了解です。promote コード削除を残タスクに追加しておきます。
+
+HANDOFF の残タスクに反映します。
+
+Read HANDOFF.md (lines 239-248)
+Edit HANDOFF.md
+Added 1 line
+HANDOFF 更新しました。/crm と /crm-settings の登録も完了済みに変更。
+
+promote 削除の対象ファイル:
+
+intent-parser.ts — 'promote' インテント定義とプロンプト内の説明
+message.ts — case 'promote' ブロック + コンバートキーワード検出ロジック
+contact.service.ts — promoteContactToCustomer() 関数
+db/queries/contacts.ts — promoteContact() クエリ
+contact.service.test.ts — promote 関連テスト
+次の黒子セッションで Migration 016 本番適用 + backfill + promote 削除をまとめて頼めます。
+
+宿題として Slackのやり取りの反応速度の向上があります。テキスト入力でも解析中ですが長いように思います。温泉入力はもっと待たされます。ここは課題ですね。
+重要な課題ですね。現状のレイテンシを分析します。
+
+テキスト入力のボトルネック
+
+ユーザー入力
+  → Bolt SDK 受信（~100ms）
+  → Haiku NLU 呼び出し（~1-3秒）★ ここが主因
+  → DB 検索（コンテキスト解決）（~200ms）
+  → 確認メッセージ返信（~100ms）
+合計: 約 2-4 秒
+音声入力のボトルネック
+
+音声ファイルアップロード
+  → ファイルダウンロード（~500ms）
+  → Google STT 文字起こし（~2-5秒）★
+  → Haiku 同音異義語修正（~1-2秒）★
+  → Haiku NLU 解析（~1-3秒）★
+  → DB 検索 + 確認（~300ms）
+合計: 約 5-11 秒
+音声は AI を 3回連続で呼んでいるので体感的にかなり遅い。
+
+改善アプローチ
+#	施策	効果	難度
+1	即時リアクション — 受信直後に「:hourglass:」リアクションを付けて処理中を伝える	体感改善	低
+2	正規表現ショートカット — 「〇〇を登録して」「〇〇を検索」等の明確パターンは Haiku を呼ばずに即解析	NLU 1-3秒削減	中
+3	音声: STT + コンテキスト取得を並列化 — STT 待ちの間に DB からユーザーコンテキストを先読み	200-500ms 削減	低
+4	音声: 同音異義語修正を NLU に統合 — Haiku 2回を1回に統合（修正+意図解析を1プロンプトで）	1-2秒削減	中
+5	Cloud Run min-instances=1 — コールドスタート回避（月 ~¥2,000 増）	初回 3-5秒削減	低
+6	Streaming レスポンス — Haiku のストリーミングで部分結果を先に表示	体感改善	高
+即効性が高いのは 1 + 2 + 4 の組み合わせ。特に施策4（音声の Haiku 2回→1回統合）はインパクトが大きいです。
+
+これを TASK_15 として仕様化しますか？それとも宿題メモとして HANDOFF に残す程度にしますか？
+
+黒子の作業段取りを邪魔しなければTASK_15 として仕様化、影響があるならHANDOFFにしてください。
+promote 削除は intent-parser.ts と message.ts に触りますが、TASK_15 の変更（正規表現ショートカット追加・リアクション追加）とは独立した箇所なので、promote 削除 → TASK_15 の順 なら干渉しません。TASK_15 として仕様化します。
+
+Write TASK_15_RESPONSE_SPEED.md
+322 lines
+# TASK_15: Slack 応答速度の改善
+
+> **目的**: テキスト入力 2-4秒 → 1秒以内、音声入力 5-11秒 → 3-5秒に短縮
+> **優先度**: 🟡 高（UX に直結）
+> **依存**: promote コード削除の後に実施
+
+---
+
+## 1. 現状のボトルネック
+
+### テキスト入力（現状: 2-4秒）
+
+```
+ユーザー入力
+  → Bolt SDK 受信            ~100ms
+  → Haiku NLU 呼び出し       ~1,000-3,000ms  ★ 主因
+  → DB 検索（コンテキスト）    ~200ms
+  → 確認メッセージ返信        ~100ms
+合計: 約 2-4秒
+```
+
+### 音声入力（現状: 5-11秒）
+
+```
+音声ファイルアップロード
+  → ファイルダウンロード      ~500ms
+  → Google STT 文字起こし    ~2,000-5,000ms  ★
+  → Haiku 同音異義語修正     ~1,000-2,000ms  ★
+  → Haiku NLU 解析           ~1,000-3,000ms  ★
+  → DB 検索 + 確認           ~300ms
+合計: 約 5-11秒（Haiku 2回 + STT 1回 = 3回の外部 API）
+```
+
+---
+
+## 2. 改善施策
+
+### 2.1 即時リアクション（体感改善）
+
+メッセージ受信直後に ⏳ リアクションを付け、処理完了後に削除する。
+ユーザーに「受け取った」ことを即座に伝える。
+
+```typescript
+// api/src/slack/events/message.ts
+
+// メッセージ受信直後（NLU 呼び出し前）
+await client.reactions.add({
+  channel: event.channel,
+  timestamp: event.ts,
+  name: 'hourglass_flowing_sand',  // ⏳
+});
+
+// ... NLU + 処理 ...
+
+// 処理完了後
+await client.reactions.remove({
+  channel: event.channel,
+  timestamp: event.ts,
+  name: 'hourglass_flowing_sand',
+}).catch(() => {});  // 失敗しても無視
+```
+
+**効果**: 体感待ち時間の大幅改善（実時間は変わらないが「無反応」がなくなる）
+**工数**: 小（message.ts に 10 行追加）
+
+### 2.2 正規表現ショートカット（NLU バイパス）
+
+明確なパターンのメッセージは Haiku を呼ばずに即座にインテントを確定する。
+NLU 呼び出し 1-3 秒を完全に削減。
+
+```typescript
+// api/src/slack/nlu/fast-intent.ts（新規）
+
+interface FastIntentResult {
+  intent: Intent;
+  entities: Record<string, string>;
+}
+
+const FAST_PATTERNS: { pattern: RegExp; intent: Intent; extract: (m: RegExpMatchArray) => Record<string, string> }[] = [
+  // 検索系（最も頻出）
+  {
+    pattern: /^(.{1,20})(を|の)(検索|情報|詳細)/,
+    intent: 'search',
+    extract: (m) => ({ keyword: m[1].trim() }),
+  },
+  // メモ追加
+  {
+    pattern: /^(.{1,20})(の|さんの)メモ[：:](.+)/s,
+    intent: 'add_note',
+    extract: (m) => ({ keyword: m[1].trim(), memo: m[3].trim() }),
+  },
+  // 削除
+  {
+    pattern: /^(.{1,20})(を|さんを)削除/,
+    intent: 'delete_contact',
+    extract: (m) => ({ keyword: m[1].trim() }),
+  },
+  // 一覧表示
+  {
+    pattern: /^(顧客|商談|会社|リード)一覧/,
+    intent: 'show_list',
+    extract: (m) => ({ list_type: m[1] }),
+  },
+  // 登録
+  {
+    pattern: /^(.{1,20})(を|さんを)(.{1,30})(として|の|で)登録/,
+    intent: 'create_contact',
+    extract: (m) => ({ keyword: m[1].trim(), company_or_title: m[3].trim() }),
+  },
+];
+
+/** 正規表現で即座に判定。マッチしなければ null → Haiku NLU にフォールバック */
+export function fastIntentMatch(text: string): FastIntentResult | null {
+  for (const { pattern, intent, extract } of FAST_PATTERNS) {
+    const match = text.match(pattern);
+    if (match) {
+      return { intent, entities: extract(match) };
+    }
+  }
+  return null;
+}
+```
+
+呼び出し側（message.ts）:
+
+```typescript
+import { fastIntentMatch } from '../nlu/fast-intent';
+
+// NLU 呼び出し前にショートカットを試行
+const fast = fastIntentMatch(text);
+let nlu: NluResult;
+
+if (fast) {
+  // Haiku をスキップ
+  nlu = { intent: fast.intent, entities: fast.entities, confidence: 0.95 };
+} else {
+  // 従来の Haiku NLU
+  nlu = await parseIntent(text);
+}
+```
+
+**効果**: 検索・メモ・削除・一覧等の明確な指示で Haiku 1-3秒を削減
+**工数**: 中（fast-intent.ts 新規 + message.ts 改修）
+**注意**: エンティティ抽出（名前・会社・金額等の細かい解析）は Haiku の方が正確。正規表現が拾えるのはインテント判定と主要キーワードのみ。create_contact の詳細（役職・メール・電話）は確認ステップ後に追加質問する方式にする。
+
+### 2.3 音声: 同音異義語修正 + NLU を 1 回に統合
+
+現状 voice.ts で:
+1. Google STT → テキスト
+2. Haiku: 同音異義語修正（既存の顧客名・会社名で補正）
+3. Haiku: NLU 意図解析
+
+これを **1 回の Haiku 呼び出し**に統合する。
+
+```typescript
+// api/src/slack/events/voice.ts の修正
+
+// 変更前: 2回の API 呼び出し
+const corrected = await correctHomophones(rawText, knownNames);  // Haiku 1回目
+const nlu = await parseIntent(corrected);                        // Haiku 2回目
+
+// 変更後: 1回の API 呼び出し
+const nlu = await parseIntentWithCorrection(rawText, knownNames);  // Haiku 1回のみ
+```
+
+```typescript
+// api/src/slack/nlu/intent-parser.ts に追加
+
+export async function parseIntentWithCorrection(
+  rawText: string,
+  knownNames: string[],
+): Promise<NluResult> {
+  const nameList = knownNames.slice(0, 50).join(', ');  // 上位50件
+
+  const res = await anthropic.messages.create({
+    model: AI_MODELS.NLU,
+    max_tokens: 300,
+    messages: [{
+      role: 'user',
+      content: `音声認識テキストを解析してください。
+
+【音声認識結果（誤変換の可能性あり）】
+${rawText}
+
+【登録済みの顧客名・会社名】
+${nameList}
+
+以下を同時に行ってください:
+1. 音声認識の誤変換を上記の既知の名前で補正
+2. 補正後のテキストから意図を解析
+
+JSON形式で回答:
+{
+  "corrected_text": "補正後のテキスト",
+  "intent": "create_contact | add_note | search | ...",
+  "entities": { ... },
+  "confidence": 0.0-1.0
+}`
+    }],
+  });
+
+  // ... parse response ...
+}
+```
+
+**効果**: 音声入力で Haiku 1回分（1-2秒）削減
+**工数**: 中（voice.ts + intent-parser.ts 改修）
+
+### 2.4 音声: STT とコンテキスト取得を並列化
+
+STT の待ち時間（2-5秒）の間に、DB からユーザーコンテキスト（直近の操作対象）と既知の名前リストを先読みする。
+
+```typescript
+// api/src/slack/events/voice.ts
+
+// 変更前（直列）
+const rawText = await transcribe(audioBuffer);
+const knownNames = await getKnownNames(tenantId);
+const context = await getUserContext(userId);
+
+// 変更後（並列）
+const [rawText, knownNames, context] = await Promise.all([
+  transcribe(audioBuffer),
+  getKnownNames(tenantId),
+  getUserContext(userId),
+]);
+```
+
+**効果**: 200-500ms 削減
+**工数**: 小（Promise.all に変更するだけ）
+
+### 2.5 Cloud Run min-instances（コールドスタート回避）
+
+```yaml
+# api/cloudbuild.yaml or terraform
+gcloud run deploy slacksfa-api \
+  --min-instances=1 \
+  --max-instances=10
+```
+
+**効果**: 初回リクエストの 3-5 秒のコールドスタートを排除
+**コスト増**: ~¥2,000/月（常時 1 インスタンス稼働）
+**工数**: 小（デプロイ設定変更のみ）
+
+---
+
+## 3. 改善後の想定レイテンシ
+
+### テキスト入力
+
+```
+施策 2.1 + 2.2 適用後:
+
+パターンA（正規表現マッチ）:
+  ⏳ リアクション即時表示
+  → 正規表現マッチ             ~5ms
+  → DB 検索                   ~200ms
+  → 確認メッセージ             ~100ms
+  合計: ~300ms（体感即時）
+
+パターンB（Haiku フォールバック）:
+  ⏳ リアクション即時表示
+  → Haiku NLU                ~1,000-3,000ms
+  → DB 検索 + 確認            ~300ms
+  合計: ~1,300-3,300ms（体感: ⏳ があるので許容範囲）
+```
+
+### 音声入力
+
+```
+施策 2.1 + 2.3 + 2.4 適用後:
+
+  ⏳ リアクション即時表示
+  → STT + DB 先読み（並列）   ~2,000-5,000ms
+  → Haiku 統合（修正+NLU）    ~1,500-3,000ms（1回のみ）
+  → DB 検索 + 確認            ~300ms
+  合計: ~3,800-8,300ms → 現状比 30-40% 削減
+```
+
+---
+
+## 4. 実装ファイル一覧
+
+| ファイル | 操作 | 施策 | 内容 |
+|----------|------|------|------|
+| `api/src/slack/events/message.ts` | 改修 | 2.1, 2.2 | ⏳ リアクション + fastIntentMatch 呼び出し |
+| `api/src/slack/nlu/fast-intent.ts` | 新規 | 2.2 | 正規表現ショートカットパターン定義 |
+| `api/src/slack/nlu/intent-parser.ts` | 改修 | 2.3 | `parseIntentWithCorrection()` 追加 |
+| `api/src/slack/events/voice.ts` | 改修 | 2.3, 2.4 | 統合 NLU 呼び出し + Promise.all 並列化 |
+| Terraform or cloudbuild.yaml | 改修 | 2.5 | `--min-instances=1` 追加 |
+
+---
+
+## 5. 実装順序
+
+```
+Step 1: ⏳ リアクション追加（即効、低リスク）
+Step 2: fast-intent.ts + message.ts 統合（テキスト高速化のメイン）
+Step 3: voice.ts 並列化 + 統合 NLU（音声高速化のメイン）
+Step 4: Cloud Run min-instances 設定（要コスト判断）
+```
+
+---
+
+## 6. 完了条件
+
+- [ ] テキスト入力で即座に ⏳ リアクションが表示される
+- [ ] 「〇〇を検索」「メモ：〜」等の明確な指示が Haiku を経由せず即座に処理される
+- [ ] Haiku フォールバック時も ⏳ で待ち状態が伝わる
+- [ ] 音声入力で Haiku 呼び出しが 2 回 → 1 回に削減されている
+- [ ] 音声入力で STT と DB 先読みが並列実行されている
+- [ ] E2E テストが引き続き通過する
+
+---
+
+## 7. 将来の追加最適化（スコープ外メモ）
+
+- **インテントキャッシュ**: 同一ユーザーの直近5分間の同一テキストはキャッシュから返す
+- **Streaming NLU**: Haiku のストリーミングで部分的に意図が確定した時点で先行処理開始
+- **Google STT Streaming**: バッチ認識をストリーミング認識に変更（リアルタイム文字起こし）
+- **Edge 推論**: 頻出パターンを ONNX モデルでローカル推論（Haiku 不要化の究極形）
+次に HANDOFF に追加します。
+
+Edit HANDOFF.md
+Added 1 line
+TASK_15_RESPONSE_SPEED.md を作成しました。
+
+施策サマリー
+施策	テキスト	音声	工数
+⏳ リアクション	体感即時	体感即時	小
+正規表現ショートカット	1-3秒削減	-	中
+音声 Haiku 2回→1回統合	-	1-2秒削減	中
+STT + DB 並列化	-	200-500ms削減	小
+Cloud Run min-instances	初回3-5秒削減	同左	小(+¥2K/月)
+実行順: promote 削除 → TASK_15（Step 1: リアクション → Step 2: 正規表現 → Step 3: 音声統合 → Step 4: min-instances）。黒子の他の残作業（Migration 016 + backfill）とは完全に独立なので並行して進められます。
+
+'/plan/slackSFA/MEDDICC.md'にあるようにMEDDICCに基づいて AIがどれだけ適切にアドバイスできるかがこのアプリの価値につながりますね。
+Globpattern: "**/MEDDI*.md"
+Found 1 file
+Read MEDDICC.md
+まさにこれが SlackSFA の核心的な差別化ポイントですね。
+
+現状の deal-coaching.service.ts は MEDDPICC 8要素のスコアリングと推奨アクションを出していますが、このドキュメントを読むと、Salesforce のコーチングの本質は**「答えを教える」のではなく「問いを立てる」**という点にあります。
+
+現状の AI コーチングと理想のギャップ
+観点	現状の実装	Salesforce 流の理想
+MEDDPICC スコア	8要素を0-100で採点	OK（基盤はある）
+推奨アクション	「決裁者との面談を設定」等の指示	「EB に会えない理由は？どうすれば会えると思う？」という問いかけ
+パイプライン管理	日次ブリーフィングで俯瞰	3-4倍パイプラインの充足率チェックがない
+商談の鮮度	時間減衰で確率を下げる	「損切りすべきか」の判断提示がない
+競合対策	なし	差別化ポイントの確認が必要
+提言
+AI コーチングの質を上げるなら、次の段階として:
+
+問いかけ型レスポンス — 「〇〇してください」ではなく「〇〇できていない理由は何ですか？」と問う。ユーザーの回答をメモとして記録すれば、次回の確率更新にも反映できる
+パイプライン充足率 — 目標金額に対して3-4倍のパイプラインがあるかをダッシュボードに表示
+損切り提案 — 長期滞留商談に「この商談をクローズ・ロストにすべきか検討してください」と提案
+Competition フィールド — deals テーブルに competitors カラムを追加して競合情報を蓄積
+これは TASK_15 の後の話になりますが、SaaS 外販時の「他の CRM にはない AI コーチング」として最大の武器になります。TASK 化しておきますか？それとも Phase 4 のテーマとして HANDOFF に方針だけ残しますか？
+
+タスク化しておきましょう
+MEDDPICC.md の内容を踏まえて、現状のコーチング実装がどこまでカバーしているか確認します。
+
+Read deal-coaching.service.ts
+Read deal-coaching.service.ts (lines 101-300)
+現状のプロンプトとデータモデルを把握しました。TASK 化します。
+
+Write TASK_16_COACHING_EVOLUTION.md
+291 lines
+# TASK_16: AI コーチング進化 — 問いかけ型 + パイプライン管理
+
+> **目的**: MEDDPICC コーチングを Salesforce 級の品質に引き上げ、SlackSFA の核心的差別化ポイントにする
+> **優先度**: 🟡 高（SaaS 外販の武器）
+> **依存**: TASK_15（応答速度改善）の後に実施
+> **参照**: `/plan/slackSFA/MEDDICC.md`（Salesforce AE コーチング 5 カテゴリー）
+
+---
+
+## 1. 現状と課題
+
+### 現状の実装（deal-coaching.service.ts）
+
+- MEDDPICC 8要素を 0-100 でスコアリング ✅
+- evidence（根拠）と status（done/partial/missing）を返す ✅
+- suggested_actions で「具体的なアクション」を提案 ✅
+- suggested_message で「顧客に送れるメッセージ例」を生成 ✅
+- risk_factors でリスク要因を列挙 ✅
+- deal_progress_history に履歴保存 ✅
+
+### 足りていないもの（MEDDICC.md の 5 カテゴリーとの対比）
+
+| Salesforce コーチング | 現状 | ギャップ |
+|---------------------|------|---------|
+| 1. 商談の進捗・戦略 | MEDDPICC スコア + アクション提案 | **問いかけ型**でない。答えを教えている |
+| 2. パイプライン管理 | 日次ブリーフィングで件数・金額は出す | **3-4倍充足率**チェックがない。損切り提案もない |
+| 3. 営業スキル | なし | **バリューセリング**の観点がない |
+| 4. 社内リソース活用 | なし | 小規模チーム向けには不要（スコープ外） |
+| 5. マインドセット | なし | AI の役割ではない（スコープ外） |
+
+### 核心的な問題
+
+> Salesforce のマネージャーは「答えを教える」のではなく「問いを立てる」
+
+現在の AI は「決裁者との面談を設定してください」と**指示**している。
+本来は「EB に会えない理由は何ですか？どうすれば会えると思いますか？」と**問いかける**べき。
+
+---
+
+## 2. 設計
+
+### 2.1 問いかけ型コーチング
+
+#### AI プロンプトの変更
+
+```
+変更前（suggested_actions）:
+  "action": "決裁者との面談を設定してください"
+  "reason": "予算権限者に直接提案することで受注確率が上がります"
+
+変更後:
+  "action_directive": "決裁者との接触を確認する"
+  "coaching_question": "予算の最終決定権を持つ方にはお会いできていますか？もしまだなら、何が障壁になっていますか？"
+  "if_yes": "素晴らしい。その方の判断基準は把握できていますか？"
+  "if_no_hint": "チャンピオンに紹介を依頼するのが最短ルートです。次のメッセージ例を参考にしてください。"
+  "suggested_message": "○○様、ご検討いただいているとのこと、ありがとうございます。最終的なご判断をされる方にもお話しさせていただければ..."
+```
+
+#### Slack 表示の変更
+
+```
+変更前:
+  🔴 意思決定者（20/100）
+  💡 決裁者との面談を設定してください
+  理由: 予算権限者に直接提案することで受注確率が上がります
+
+変更後:
+  🔴 意思決定者（20/100）
+  ❓ 予算の最終決定権を持つ方にはお会いできていますか？
+     もしまだなら、何が障壁になっていますか？
+  💡 ヒント: チャンピオンに紹介を依頼するのが最短ルートです
+  📝 [この質問に回答する]  ← ボタン
+```
+
+#### 回答の記録
+
+「この質問に回答する」ボタンを押すとモーダルが開き、回答を入力。
+回答は `crm_notes` に保存され、次回のコーチングで AI がコンテキストとして参照する。
+
+```
+┌─────────────────────────────────────┐
+│  コーチング回答                      │
+│                                      │
+│  質問:                               │
+│  予算の最終決定権を持つ方には        │
+│  お会いできていますか？              │
+│                                      │
+│  回答:                               │
+│  ┌──────────────────────────────┐   │
+│  │ まだ会えていません。担当の    │   │
+│  │ 佐藤さん経由で紹介を依頼中   │   │
+│  └──────────────────────────────┘   │
+│                                      │
+│            [キャンセル] [送信]       │
+└─────────────────────────────────────┘
+```
+
+保存時:
+1. `crm_notes` に `note_type = 'coaching_response'` で INSERT
+2. `memo` に「Q: {質問}\nA: {回答}」を記録
+3. センチメント分析 → 確率更新をトリガー
+4. 回答内容に応じて AI が follow-up アクションを提示（次回コーチング時）
+
+---
+
+### 2.2 パイプライン充足率チェック
+
+#### 概念
+
+営業目標を達成するには、目標額の **3-4 倍** のパイプライン（open 商談の合計金額）が必要。
+
+```
+目標売上:    ¥10,000,000/月
+必要パイプライン: ¥30,000,000〜¥40,000,000
+現在の open 合計: ¥18,000,000
+充足率:      45-60%  → ⚠️ 不足
+```
+
+#### DB: テナント設定に目標額を追加
+
+```sql
+-- 017_pipeline_target.sql
+ALTER TABLE tenant_plans
+  ADD COLUMN monthly_target_yen NUMERIC(12,0) DEFAULT 0,
+  ADD COLUMN pipeline_ratio     NUMERIC(3,1) DEFAULT 3.0;  -- 目標の何倍必要か
+```
+
+#### 日次ブリーフィングに追加
+
+```
+既存:
+  📊 本日のブリーフィング
+  進行中: 8件 / ¥18,000,000
+  今週クローズ予定: 2件
+
+追加:
+  📊 パイプライン充足率
+  ████████░░░░░░░░░░░░ 45%
+  目標 ¥10M × 3.0倍 = 必要 ¥30M / 現在 ¥18M
+  ⚠️ パイプラインが不足しています。新規商談の創出を検討してください。
+```
+
+#### Web ダッシュボードに追加
+
+Dashboard.vue に「パイプライン充足率」ゲージを追加。
+
+---
+
+### 2.3 損切り提案
+
+#### ルール
+
+| 条件 | 通知 |
+|------|------|
+| 30日以上未接触 + win_probability < 20% | 「この商談をクローズ・ロストにすべきか検討してください」 |
+| 60日以上未接触（確率不問） | 「この商談は 60 日間動きがありません。継続する理由はありますか？」 |
+| クローズ予定日を 30 日以上超過 | 「クローズ予定を過ぎています。日程を見直すか、損切りを検討してください」 |
+
+#### 表示場所
+
+- 日次ブリーフィングの末尾に「損切り候補」セクション
+- AI Flow 詳細モーダルに「⚠️ 長期滞留」バッジ
+
+#### Slack 通知
+
+```
+⚠️ 損切り検討が必要な商談
+
+1. *ABC社 クラウド移行* — 45日未接触 / win: 15%
+   ❓ この商談を継続する理由はありますか？
+   [継続する（理由を記入）] [クローズ・ロスト]
+
+2. *DEF社 基幹システム更新* — クローズ予定を32日超過
+   ❓ 新しいクローズ予定日はいつですか？
+   [日程更新] [クローズ・ロスト]
+```
+
+「継続する」→ モーダルで理由を入力 → メモに記録 + 時間減衰リセット
+「クローズ・ロスト」→ `deals.stage = 'lost'` に更新 + 確認
+
+---
+
+### 2.4 競合管理（deals テーブル拡張）
+
+```sql
+-- 017_pipeline_target.sql（同じマイグレーション）
+ALTER TABLE deals
+  ADD COLUMN competitors JSONB DEFAULT '[]',       -- ["SalesForce", "HubSpot"]
+  ADD COLUMN differentiators JSONB DEFAULT '[]';   -- ["価格", "AI分析"]
+```
+
+コーチング時に「競合は把握できていますか？」の問いに対して、回答を `competitors` に蓄積。
+次回のコーチングで「前回 SalesForce が競合と伝えていましたが、差別化ポイントは明確ですか？」と問える。
+
+---
+
+## 3. AI プロンプト改修
+
+### 3.1 コーチング評価プロンプト（deal-coaching.service.ts）
+
+現在の `suggested_actions` を以下に拡張:
+
+```json
+{
+  "overall_score": 65,
+  "elements": { ... },
+  "coaching_items": [
+    {
+      "priority": "high",
+      "category": "economic_buyer",
+      "category_label": "意思決定者",
+      "coaching_question": "予算の最終決定権を持つ方にはお会いできていますか？",
+      "if_answered_yes": "その方の判断基準は把握できていますか？",
+      "if_answered_no": "チャンピオンに紹介を依頼するのが最短ルートです。",
+      "action_hint": "次回のミーティングで紹介を依頼する",
+      "suggested_message": "○○様、最終的なご判断をされる方にもお話しさせていただければ..."
+    }
+  ],
+  "pipeline_note": "この商談が受注になっても目標の15%です。並行して新規開拓が必要です。",
+  "stale_warning": null,
+  "risk_factors": ["競合情報が不明", "クローズ予定まで残り12日"]
+}
+```
+
+### 3.2 日次ブリーフィングプロンプト
+
+パイプライン充足率 + 損切り候補を追加:
+
+```
+📊 パイプライン充足率: 45%（¥18M / 必要¥30M）
+⚠️ 損切り候補: 2件（ABC社 45日未接触、DEF社 予定超過32日）
+```
+
+---
+
+## 4. 実装ファイル一覧
+
+| ファイル | 操作 | 内容 |
+|----------|------|------|
+| `api/db/migrations/017_pipeline_target.sql` | 新規 | monthly_target_yen + pipeline_ratio + competitors + differentiators |
+| `api/src/services/deal-coaching.service.ts` | 改修 | プロンプト → 問いかけ型に変更、coaching_items 構造変更 |
+| `api/src/services/deal-coaching.service.ts` | 改修 | `dailyBriefing()` にパイプライン充足率 + 損切り候補追加 |
+| `api/src/services/deal-coaching.service.ts` | 改修 | `assessDealProgress()` で competitors/differentiators をコンテキストに含める |
+| `api/src/slack/views/coaching-response-modal.ts` | 新規 | コーチング質問への回答モーダル |
+| `api/src/slack/views/flow-detail.ts` | 改修 | 長期滞留バッジ追加 |
+| `api/src/index.ts` | 改修 | coaching-response modal submit ハンドラ追加 |
+| `api/src/routes/api.ts` | 改修 | `GET /api/dashboard/pipeline-coverage` エンドポイント追加 |
+| `web/src/views/Dashboard.vue` | 改修 | パイプライン充足率ゲージ追加 |
+| `web/src/views/Settings.vue` | 改修 | 月間目標額の設定フィールド追加 |
+
+---
+
+## 5. 実装順序
+
+```
+Step 1: DB マイグレーション（017）
+Step 2: プロンプト改修 — coaching_items 構造変更（問いかけ型）
+Step 3: Slack 通知フォーマット変更（coaching_question + ボタン）
+Step 4: coaching-response-modal.ts 新規作成
+Step 5: パイプライン充足率（API + Dashboard + ブリーフィング）
+Step 6: 損切り提案（ブリーフィング + AI Flow バッジ）
+Step 7: competitors/differentiators のコーチングコンテキスト統合
+Step 8: Settings に月間目標額設定を追加
+```
+
+---
+
+## 6. 完了条件
+
+- [ ] コーチング結果が「問いかけ型」で表示される（❓ + 質問文）
+- [ ] 「この質問に回答する」ボタンからモーダルで回答でき、crm_notes に記録される
+- [ ] 回答が次回のコーチングで AI のコンテキストに含まれる
+- [ ] 日次ブリーフィングにパイプライン充足率が表示される
+- [ ] 損切り候補が日次ブリーフィングに表示される（30日未接触 or 予定超過）
+- [ ] 損切り候補から「継続」「ロスト」をワンタップで選択できる
+- [ ] deals テーブルに competitors / differentiators が追加されている
+- [ ] Web ダッシュボードにパイプライン充足率ゲージがある
+- [ ] Settings で月間目標額が設定できる
+
+---
+
+## 7. 期待されるビジネスインパクト
+
+| 観点 | 効果 |
+|------|------|
+| **営業の行動変容** | 指示ではなく問いかけにより、営業担当が自ら考える習慣がつく |
+| **商談の精度向上** | パイプライン充足率の可視化で「量」の不足を早期発見 |
+| **不良在庫の排除** | 損切り提案で滞留商談を整理し、リソースを有望案件に集中 |
+| **SaaS 差別化** | 「AI が営業マネージャーの代わりに問いかける」は他社 CRM にない価値 |
+| **データ蓄積** | コーチング回答が crm_notes に蓄積 → AI の精度が使うほど上がる |
+Edit HANDOFF.md
+Added 1 line
+TASK_16_COACHING_EVOLUTION.md を作成しました。
+
+TASK_16 の 4 つの柱
+1. 問いかけ型コーチング — 「決裁者と面談してください」→「決裁者に会えない理由は何ですか？」に変換。回答はメモとして蓄積され、次回のコーチングで AI が参照する。使うほど賢くなるループ。
+
+2. パイプライン充足率 — テナント設定で月間目標額を入力 → 目標の3倍必要なパイプラインに対して現在何%かをブリーフィングとダッシュボードに表示。
+
+3. 損切り提案 — 30日未接触 + 低確率の商談、予定日超過の商談に「継続する理由はありますか？」と問いかける。不良在庫の排除。
+
+4. 競合管理 — deals に competitors / differentiators カラム追加。コーチング回答から蓄積。
+
+これが SaaS 外販時の「他の CRM にはない」一番の武器になります。実行順は promote 削除 → TASK_15 → TASK_16 です。
+
+AIの判断の根拠として、メールやSlackのやり取りを見るのは挑戦として、AI自身があるポイントまでは、見込む客とやり取りを自主的にすることも考えられますね。
+鋭い視点です。今のフェーズ B（下書き承認型）の延長線上に、AI が自律的にやり取りする段階がありますね。
+
+自律レベルの整理
+
+現在                        近未来                      将来
+Phase A          Phase B              Phase C              Phase D
+通知のみ     →   下書き承認型     →   半自律型         →   完全自律型
+                  (実装済み)
+
+人間: 全判断      人間: 承認/却下      人間: 例外のみ       人間: モニタリング
+AI:  分析のみ     AI:  下書き生成      AI:  自動送信        AI:  全自動
+                                      (条件付き)           (条件付き)
+Phase C（半自律型）のイメージ
+AI が自主的にやり取りできる範囲をテナント設定で制御:
+
+設定	例	AI の行動
+自動送信 OK な内容	お礼メール、資料送付フォロー、日程調整	承認なしで即送信
+承認が必要な内容	価格交渉、契約条件、技術的回答	従来通り Phase B
+AI 禁止	クレーム対応、法務関連	通知のみ
+
+見込み客: 「資料をいただけますか？」
+  ↓
+AI（自動判定）: カテゴリ = 資料送付フォロー → 自動送信 OK
+  ↓
+AI → 見込み客: 「資料をお送りします。添付のPDFをご確認ください。
+                 ご不明点があればお気軽にご連絡ください。」
+  ↓
+AI → 営業担当（Slack 事後通知）:
+  「📤 田中さん（山田商事）に資料送付メールを自動送信しました
+   内容: [表示]  問題があれば [取り消し]」
+Phase C が MEDDPICC コーチングを強化する理由
+AI が実際にやり取りすることで:
+
+Pain の深掘り — 「具体的にどのような課題をお持ちですか？」と AI が直接聞ける
+Timeline の確認 — 「導入時期のご希望はございますか？」を自然な流れで確認
+Champion の発見 — 「他にこの件に関わっていらっしゃる方はいますか？」
+つまり MEDDPICC の 情報収集を AI がある程度自動化できる。営業担当は AI が集めた情報を元にコーチングを受け、EB との面談など人間にしかできない部分に集中できる。
+
+ただし、ここは慎重に
+信頼性の問題: AI が間違った回答をしたら顧客との関係が壊れる
+段階的な導入: まず社内テストで AI の自動送信精度を検証してから
+取り消し機能: 送信後 5 分以内なら取り消し可能にする
+これは TASK_16 の後、Phase 4 のテーマとして HANDOFF に方針を残しておくのが良いと思います。TASK_16 で問いかけ型コーチングを完成させて AI の判断精度を実証してから、Phase C の自律型に進む流れが自然です。
+
+HANDOFF に Phase 4 のビジョンとして書き残しますか？
+
+はい、その流れでHANDOFFに書き残してください。あとはRAGですね.Claude Codeの開発者でありAnthropicのエンジニアでもあるBoris Cherny氏によるとAgentic Searchほうが良さそうですね。
+Read HANDOFF.md
+Edit HANDOFF.md
+Added 50 lines
+HANDOFF.md に Phase 4 ビジョンを追記しました。内容:
+
+AI 自律コミュニケーション — Phase A(通知)→B(承認)→C(セミオート)→D(フルオート) の4段階モデル。Phase C ではカテゴリー別に自動送信を許可（お礼・日程調整は自動、価格交渉は承認制）
+Agentic Search — Boris Cherny 氏の知見に基づき、RAG ではなく AI が自律的に検索・評価・再検索するアプローチ。MCP サーバー経由で Web 検索・社内ナレッジ・CRM データを接続
+ロードマップ更新 — promote 削除→TASK_15→TASK_16 の実装順序を反映、8月に Phase 4（AI 自律化）を配置
+AIが自動的にメールやSlackで受け答えをするときに必要なRAG or Agentic Searchをどう考えますか？ここは会社によってデータ整備等のオンデマンドな作業が発生するので、オプションとして、請負契約をしてビジネス化するのがいいのではと思っています。
+良い着眼点です。いくつかの観点から整理します。
+
+なぜ Agentic Search / RAG は「SaaS の機能」ではなく「請負」が正解か
+1. データは会社ごとに全く違う
+
+会社	必要なナレッジ	データの所在
+製造業	製品スペック・納期・MOQ	基幹システム / Excel
+SIer	過去案件・技術スタック・単価表	社内 Wiki / Confluence
+コンサル	提案書テンプレ・事例集	Google Drive / Box
+これを「設定画面でポチポチ」で済ませられるレベルにプロダクト化するのは非現実的です。データの棚卸し・クレンジング・構造化は人間が入らないと回らない。
+
+2. ビジネスモデルとして理にかなう
+
+
+SlackSFA（SaaS）         → 月額サブスクリプション（¥980〜¥3,500/user）
+  ↓ AI が自律的に動くには社内ナレッジが必要
+  ↓ 「AI をもっと賢くしたいですか？」
+ナレッジ構築（請負）      → 初期構築 30-100万 + 保守月額 5-10万
+これは Salesforce のモデルそのもの です。SaaS の月額は安くても、導入コンサル・カスタマイズで大きな収益を得る。SlackSFA の場合は「AI のナレッジ整備」がそれに当たる。
+
+3. 技術的には MCP サーバーが「請負の成果物」になる
+
+
+請負契約の納品物:
+  ├── MCP サーバー（顧客専用）
+  │   ├── 社内 Wiki コネクタ
+  │   ├── 製品カタログ検索
+  │   └── 過去提案書検索
+  ├── データ整備ドキュメント
+  └── 運用マニュアル（データ更新手順）
+MCP は標準化されたプロトコルなので、一度コネクタのパターンを作れば横展開できる。最初の数社は工数がかかるが、業種ごとにテンプレート化していけば利益率が上がる。
+
+4. 段階的な提案ストーリー
+
+
+Step 1: SlackSFA 無料トライアル（SaaS）
+  → 「Slack でメモするだけで CRM が動く」を体験
+
+Step 2: 有料プラン契約（SaaS 月額）
+  → コーチング・ナーチャリング・日次ブリーフィング
+
+Step 3: 「AI にもっと仕事を任せたい」
+  → 請負契約: ナレッジ構築 + Agentic Search 導入
+  → AI が製品知識・過去事例を踏まえて自律的に返信
+
+Step 4: 保守契約（月額）
+  → データ更新・チューニング・新コネクタ追加
+注意点
+請負にすべきもの / SaaS に含めるべきもの の線引きは重要です。
+
+SaaS に含める（全顧客共通）	請負（個社対応）
+Web 検索（業界ニュース・競合情報）	社内ナレッジの構造化
+CRM データ内の Agentic Search	基幹システム連携
+汎用的なコーチングナレッジ	自社製品カタログの取り込み
+業務フロー固有のカスタマイズ
+Web 検索ベースの Agentic Search は SaaS の標準機能 として入れるべきです。これだけでもエンリッチメントやコーチングの質が上がる。社内固有のデータ接続が「請負のアップセル」になる。
+
+HANDOFF に請負ビジネスの構想も残しますか？

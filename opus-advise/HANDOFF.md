@@ -1,5 +1,5 @@
 # SlackSFA プロジェクト HANDOFF
-**最終更新：2026年3月24日（Phase 3 TASK_09・TASK_14 完了）**
+**最終更新：2026年3月24日（バグ修正・TASK_15・TASK_16 完了・本番デプロイ完了）**
 
 ---
 
@@ -81,7 +81,8 @@ Slack 完全統合型 AI-CRM「SlackSFA」の自社開発。Salesforce の代替
 | `013_discarded_stage.sql` | discarded_at カラム追加、churned → discarded マイグレーション | ✅ | ✅ |
 | `014_remove_customer_stage.sql` | customer → active マイグレーション（2件更新） | ✅ | ✅ |
 | `015_link_contacts_to_accounts.sql` | contacts.company_name → accounts テーブル生成 + account_id リンク | ✅ | ✅ |
-| `016_ai_usage_log.sql` | ai_usage_log + tenant_plans テーブル | ✅ | **未適用** |
+| `016_ai_usage_log.sql` | ai_usage_log + tenant_plans テーブル | ✅ | ✅ |
+| `017_pipeline_target.sql` | pipeline target + coaching_items カラム群 | ✅ | ✅ |
 
 **Migration 015 結果:** 6 accounts 新規作成 → 計 7 accounts。8/11 contacts に account_id 紐付け済み。
 
@@ -117,7 +118,11 @@ Slack 完全統合型 AI-CRM「SlackSFA」の自社開発。Salesforce の代替
 | センチメント駆動の確率エンジン | ✅ 稼働中 |
 | 廃棄コンタクト自動削除（30日）| ✅ 稼働中 |
 | コンタクト登録時 AI 件名自動生成 | ✅ 稼働中 |
-| AI 利用量管理 + Slack DM クォータ通知 | ✅ 実装済み（Migration 016 本番適用待ち） |
+| AI 利用量管理 + Slack DM クォータ通知 | ✅ 稼働中 |
+| ⏳リアクション + 正規表現 NLU ショートカット | ✅ 稼働中 |
+| 問いかけ型コーチング（CoachingItem）| ✅ 稼働中 |
+| パイプライン充足率ゲージ（Web + 日次ブリーフィング）| ✅ 稼働中 |
+| 損切り提案 + 継続確認ボタン（日次ブリーフィング）| ✅ 稼働中 |
 | Playwright E2E テスト（19/19） | ✅ ローカル通過 |
 
 ---
@@ -204,6 +209,44 @@ web/src/
 
 ---
 
+### バグ修正・TASK_15・TASK_16 ✅（2026年3月24日）
+
+#### バグ修正（ダミーデータ投入時に発覚）
+
+| バグ | 原因 | 修正 |
+|:---|:---|:---|
+| `crm_notes_lead_id_fkey` FK 違反 | `message.ts` add_note が contact_id を `lead_id` として渡していた（leads テーブルは Migration 008 で廃止済み） | `noteContactId` にリネームし `contactId` として正しく渡す |
+| `deals_stage_check` 制約違反 | `deal.service.ts` + `deals.ts` のデフォルト stage が `'prospecting'`（Migration 010 で `open/won/lost` の 3 値に変更済み） | デフォルト値を `'open'` に修正 |
+
+#### TASK_15：応答速度改善
+
+| ファイル | 内容 |
+|:---|:---|
+| `api/src/slack/nlu/fast-intent.ts` | 正規表現 NLU ショートカット（search / add_note / delete_contact / show_list / create_contact）|
+| `api/src/slack/events/message.ts` | 「🔍 解析中...」→ ⏳ reactions.add/remove に変更、`fastIntentMatch()` で Haiku 呼び出しをスキップ |
+| `api/src/slack/events/voice.ts` | Promise.all で `downloadFile` + `getSpeechPhrases` + `getTenant` を並列化、`parseIntentWithCorrection()` に統合 |
+| `api/src/slack/nlu/intent-parser.ts` | `parseIntentWithCorrection(rawText, knownNames)` 追加（同音異字補正 + NLU を 1 Haiku 呼び出しに統合） |
+
+**効果：** 正規表現マッチ時は Haiku API 呼び出しゼロ。音声入力は Haiku 呼び出しを 2→1 回に削減。
+
+#### TASK_16：コーチング進化
+
+| ファイル | 内容 |
+|:---|:---|
+| `api/src/db/migrations/017_pipeline_target.sql` | `tenant_plans` に `monthly_target_yen` + `pipeline_ratio`、`deals` に `competitors` + `differentiators` + `coaching_items`、`deal_progress_history` に `coaching_items` |
+| `api/src/services/deal-coaching.service.ts` | `CoachingItem` 型（質問+ヒント形式）、`getPipelineCoverage()`、dailyBriefing に充足率バー + 滞留案件（30日以上未接触）検出、損切り提案ボタン |
+| `api/src/slack/views/coaching-response-modal.ts` | 問いかけへの回答モーダル。回答は `crm_notes`（`coaching_response` 種別）に保存し確率再計算をトリガー |
+| `api/src/routes/api.ts` | `GET /api/dashboard/pipeline-coverage`、`PUT /api/settings/pipeline-target` 追加 |
+| `web/src/views/Dashboard.vue` | パイプライン充足率ゲージ（緑/黄/赤）追加 |
+| `web/src/views/Settings.vue` | 月間売上目標・必要パイプライン倍率の編集 UI 追加 |
+| `web/src/lib/api-client.ts` | `PipelineCoverage` 型、`pipelineCoverage()`・`updatePipelineTarget()` メソッド追加 |
+
+#### DB マイグレーション（本番適用済み）
+
+| ファイル | 内容 | 本番 |
+|:---|:---|:---|
+| `017_pipeline_target.sql` | pipeline target + coaching_items カラム群 | ✅ 2026-03-24 |
+
 ### TASK_09：E2E テスト基盤 ✅（2026年3月24日）
 
 Playwright E2E テスト **19/19 all passing**。
@@ -243,10 +286,13 @@ Playwright E2E テスト **19/19 all passing**。
 
 | タスク | 内容 | 優先度 | 状態 |
 |:---|:---|:---|:---|
-| /crm 登録 | Slack App 設定で `/crm` スラッシュコマンドを追加（同 URL） | 🟡 高 | 未着手 |
-| /crm-settings 登録 | Slack App 設定で `/crm-settings` スラッシュコマンドを追加 | 🟡 中 | 未着手 |
-| backfillFlowSubjects | `api/scripts/backfill-flow-subjects.ts` を本番 DB で実行 | 🟡 中 | 未着手 |
-| Migration 016 本番適用 | `016_ai_usage_log.sql` を本番 Cloud SQL に適用 | 🟡 高 | 未着手 |
+| /crm 登録 | Slack App 設定で `/crm` スラッシュコマンドを追加（同 URL） | 🟡 高 | ✅ 完了 |
+| /crm-settings 登録 | Slack App 設定で `/crm-settings` スラッシュコマンドを追加 | 🟡 中 | ✅ 完了 |
+| backfillFlowSubjects | `api/scripts/backfill-flow-subjects.ts` を本番 DB で実行 | 🟡 中 | ✅ 完了（本番 11 contacts） |
+| Migration 016 本番適用 | `016_ai_usage_log.sql` を本番 Cloud SQL に適用 | 🟡 高 | ✅ 完了 |
+| promote コード削除 | `promoteContactToCustomer` + intent `promote` を削除（customer ステージ廃止済み） | 🟡 中 | ✅ 完了 |
+| TASK_15 応答速度改善 | 正規表現ショートカット + ⏳リアクション + 音声 Haiku 統合 | 🟡 高 | ✅ 完了 |
+| TASK_16 コーチング進化 | 問いかけ型 + パイプライン充足率 + 損切り提案 | 🟡 高 | ✅ 完了 |
 
 ---
 
@@ -305,17 +351,124 @@ Playwright E2E テスト **19/19 all passing**。
 
 ---
 
+## Phase 4 ビジョン：AI 自律化 & ナレッジ拡張
+
+### AI 自律コミュニケーション — 段階的自律モデル
+
+現在の AI は「通知 → 人間が判断 → 人間が実行」のループ。これを段階的に自律化する。
+
+| Phase | 名称 | 動作 | 状態 |
+|:---|:---|:---|:---|
+| **A** | 通知のみ | インバウンド活動を検知 → 温度感・推奨アクションを Slack 通知 | ✅ 実装済み |
+| **B** | 下書き承認 | AI が返信下書きを生成 → ユーザーが [承認]/[修正]/[エスカレート] | ✅ 実装済み |
+| **C** | セミオート | **カテゴリー別に自動送信を許可**。安全なカテゴリー（お礼・日程調整・資料送付）は人間の承認なしで AI が送信。重要な判断（価格交渉・契約条件）は Phase B のまま承認制 | 🔮 構想 |
+| **D** | フルオート | AI が営業プロセス全体を自律実行。人間は例外処理とレビューのみ | 🔮 長期構想 |
+
+#### Phase C 設計メモ
+
+```
+テナント設定で「自動送信を許可するカテゴリー」をチェックボックスで選択:
+  ☑ お礼メッセージ（面談後のフォローアップ）
+  ☑ 日程調整（候補日の提示・確認）
+  ☑ 資料送付（依頼された資料の送付）
+  ☐ 価格提示（見積もり・ディスカウント）
+  ☐ 契約関連（条件交渉・合意形成）
+
+自動送信時も Slack に「✅ ABC社に日程調整メールを送信しました」と事後通知。
+ユーザーはいつでもカテゴリーの自動送信を OFF にできる。
+```
+
+**Phase C の前提条件:**
+- TASK_16（問いかけ型コーチング）完了 — AI の判断精度が十分に検証されていること
+- 送信ログの完全な透明性（いつ・誰に・何を送ったか全履歴）
+- ワンクリックで自動送信を全停止できる「キルスイッチ」
+
+### Agentic Search（RAG の進化形）
+
+ナーチャリングや商談コーチングで外部知識（業界情報・競合分析・ベストプラクティス）を参照する際、従来の RAG（Retrieval-Augmented Generation）ではなく **Agentic Search** を採用する方針。
+
+> Boris Cherny 氏（Anthropic エンジニア / Claude Code 開発者）の知見:
+> エージェントが自ら検索クエリを組み立て、結果を評価し、必要なら再検索する。
+> 固定のベクトル DB チャンクではなく、動的な探索ループで最適な情報を取得する。
+
+**SlackSFA への適用案:**
+- 商談コーチング時: AI が「この業界の平均受注サイクル」「競合の最新動向」を自律的に検索し、コーチングの問いかけに反映
+- エンリッチメント: 会社情報の補完を固定 API ではなく Web 検索 + AI 判断で実行
+- ナーチャリング: 見込み客の最新ニュース（プレスリリース・IR 情報）を自動収集し、パーソナライズされたアプローチを提案
+
+**技術的方向性:** MCP（Model Context Protocol）サーバーとして Web 検索・社内ナレッジ・CRM データを接続し、AI エージェントが必要に応じてツールを選択・実行する。
+
+### Agentic Search / ナレッジ構築の請負ビジネス化
+
+Agentic Search が機能するには、AI が参照する **社内ナレッジの整備** が必要。これは会社ごとにデータの所在・形式・粒度が全く異なるため、SaaS の標準機能としてセルフサービス化するのは非現実的。
+
+#### SaaS / 請負の線引き
+
+| SaaS に含める（全顧客共通） | 請負（個社対応） |
+|:---|:---|
+| Web 検索（業界ニュース・競合情報） | 社内ナレッジの棚卸し・構造化 |
+| CRM データ内の Agentic Search | 基幹システム・社内 Wiki 連携 |
+| 汎用コーチングナレッジ | 自社製品カタログの取り込み |
+| | 業務フロー固有のカスタマイズ |
+
+#### ビジネスモデル
+
+```
+SlackSFA（SaaS 月額）
+  ¥980〜¥3,500/user
+  → Slack CRM + コーチング + 汎用 Agentic Search（Web 検索）
+        ↓
+  「AI にもっと仕事を任せたい」「自社データで賢くしたい」
+        ↓
+ナレッジ構築（請負契約）
+  初期構築: 30-100万円
+  → データ棚卸し・クレンジング・MCP コネクタ開発
+  → 納品物: 顧客専用 MCP サーバー + 運用マニュアル
+        ↓
+保守契約（月額）
+  5-10万円/月
+  → データ更新・チューニング・新コネクタ追加
+```
+
+#### 請負の納品物イメージ
+
+```
+MCP サーバー（顧客専用）
+  ├── 社内 Wiki コネクタ（Confluence / Notion）
+  ├── 製品カタログ検索
+  ├── 過去提案書・事例検索
+  └── 基幹システム連携（在庫・納期照会）
+```
+
+**横展開戦略:** 最初の数社は工数がかかるが、業種ごとにコネクタをテンプレート化（製造業パック・SIer パック等）すれば利益率が上がる。Salesforce の導入コンサルと同じ構造。
+
+#### 顧客獲得フロー
+
+```
+Step 1: SlackSFA 無料トライアル（SaaS）
+  → 「Slack でメモするだけで CRM が動く」を体験
+Step 2: 有料プラン契約（SaaS 月額）
+  → コーチング・ナーチャリング・日次ブリーフィング
+Step 3: 請負契約 — ナレッジ構築
+  → AI が自社製品・過去事例を踏まえて自律的に返信可能に
+Step 4: 保守契約（月額）
+  → 継続的なデータ更新・精度改善
+```
+
+---
+
 ## ロードマップ
 
 ```
 2026年
- 3月          4月          5月          6月     7月
- ├────────────┼────────────┼────────────┼──────┤
- │ Phase 3    │ Phase 3 後半                    │
- │ TASK_13✅  │ /crm登録→backfill→Migration016  │
- │ TASK_09✅  │ →本番適用   │ SaaS 化 準備      │
- │ TASK_14✅  │            │ β版    ▲ 外販      │
- ▲ 現在地     ▲ 本番適用    ▲ β版    ▲ 外販
+ 3月          4月          5月          6月     7月          8月
+ ├────────────┼────────────┼────────────┼──────┼────────────┤
+ │ Phase 3    │ Phase 3 後半                    │ Phase 4    │
+ │ TASK_13✅  │ promote削除→TASK_15→TASK_16     │            │
+ │ TASK_09✅  │ Migration016→backfill           │ Phase C    │
+ │ TASK_14✅  │            │ SaaS 化準備        │ (セミオート)│
+ │            │            │ β版       ▲ 外販   │ Agentic    │
+ ▲ 現在地(T16完)          ▲ β版      ▲ 外販    ▲ AI自律化
 ```
 
 ---
