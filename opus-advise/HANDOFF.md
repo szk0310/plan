@@ -1681,5 +1681,31 @@ Bearer トークン 1 個から (tenant_id, slack_user_id, role) をサーバー
 
 ### 残タスク（Phase 7-A.2 候補・後日）
 - Slack マジックリンクログイン（API キーコピペ不要化）
-- /stripe/checkout の `<a>` リンク経由の checkout 開始（現状ブラウザ Bearer 不送信のため要 JS 化）
-- M3 /debug を HTTP レベルで admin only 化（現状は Web Router の UI ガード + Phase 7-H で部分的にカバー）
+
+---
+
+## Phase 7 完全完了（2026-05-08 オッパ最終承認）
+
+Phase 7 全 8 項目がオッパレビュー通過し完了。β 版の認証・認可・本番化準備は揃った。
+
+| Phase | 内容 | 完了日 | 主 commit |
+|---|---|---|---|
+| 7-A.1 | 個別ユーザー API キー認証（C1 解消） | 2026-05-06〜07 | `8f0459c` + `688843b` |
+| 7-B | fail-closed 徹底（C2 / C3） | 2026-05-04 | `2722807` |
+| 7-C | 起動時 advisory lock（C4） | 2026-05-04 | `2722807` |
+| 7-D | SQL placeholder 化（M1 + M6） | 2026-05-07 | `6405959` + `3d4340e`（軽微改善） |
+| 7-E | REST API RBAC 完全化（C5 / C6） | 2026-05-04 | `6724f08` |
+| 7-F | Slack delete RBAC（C7） | 2026-05-04 | `6724f08` |
+| 7-G | RBAC 回帰テストスイート（M8） | 2026-05-04 | `56bd69d` |
+| 7-H | Web UI Router admin guard（M3 / M7） | 2026-05-04 | `2722807` |
+| Stripe POST 化 | Phase 7-A.1 後続バグ解消 | 2026-05-07 | `2de4f8c` |
+
+### 軽微改善 M-A / M-B（2026-05-08 commit `3d4340e`）
+- M-A: sentiment-summary の params を `[sid, sid]` 重複 push + `$1/$2` 別参照に変更（fragment 自己完結性向上）
+- M-B: `accountVisibilityFragment` に複数 fragment 連結時の注意コメント追加
+- M-C（`applyDualOwnerFilter` ヘルパー化）はオッパも「過剰設計」として不採用
+
+### 次のステップ
+- β 継続運用で実環境動作を観察
+- Phase 7-A.2（Slack マジックリンク）は 2026-06 初〜中旬に着手予定
+- Salesforce パートナー面談に向けて Security Review 提出可能状態として進められる
